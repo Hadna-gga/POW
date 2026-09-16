@@ -1,0 +1,46 @@
+body {
+    font-family: Verdana;
+    background-color: #ddd3c5;
+}
+.texto{
+    margin-left: 450px;
+    margin-right: 200;
+    margin-top: 50px; 
+}
+.presentacion{
+    font-size: 50px;
+    margin-left: 800px;
+    margin-top: 50px   
+}
+.tarjeta{
+    background-color: white;
+    border-radius: 20px;
+    padding: 25px;
+    margin: 30px;
+}
+.tarjet{
+    font-size: 20px;
+    background-color: white;
+    border-radius: 20px;
+    padding: 25px;
+    margin: 30px;
+}
+a {
+    margin-left: 25px;
+    background-color: hsl(0, 0%, 1%); 
+}
+.imagen{
+    margin-top: -1000px;
+    border-radius: 10%;
+    margin-left: 15px;
+}
+
+.formacion{
+    margin-left: 100px;
+
+}
+footer{
+    text-align: center;
+    padding: 20px;
+    font-family: Courier New;
+}

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portafolio</title>
+    <link rel="stylesheet" href="portafolio.css"
+
+</head>
+<body>
+    <h1>PORTAFOLIO</h1>
+    <hr>
+    <section class="tarjeta">
+        <h2 class="presentacion">Presentacion</h2>
+        <p class="texto">Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+            Nulla dignissim, augue et molestie tincidunt, magna libero 
+            cursus turpis, vitae porta mi ex nec nisi. Lorem ipsum dolor 
+            sit amet, consectetur adipiscing elit. Sed euismod elit sed
+            nulla sodales, vitae ultrices urna fermentum. Aliquam commodo
+            sapien sed dignissim suscipit. Maecenas eget molestie diam,
+            nec tristique enim. Maecenas nisi ante, ullamcorper quis 
+            nisi vel, consequat interdum libero. Mauris a porta magna,
+            et consectetur justo. Nullam varius ut justo vel pharetra.
+            Sed ornare nibh nec quam sodales congue. Morbi dui diam,
+            aliquet at libero eget, condimentum maximus lectus.<br><br>
+            Nullam ullamcorper lorem vehicula libero tincidunt suscipit. Maecenas odio augue, 
+            consectetur et gravida sit amet, rhoncus at nunc. Quisque sit amet lectus et dui pretium
+            aliquet. Vivamus posuere sapien tempor nulla laoreet, at tincidunt ipsum ultricies.
+            Praesent posuere placerat diam quis vulputate. Quisque sodales pulvinar fermentum. 
+            Aenean porta orci non commodo consequat. Curabitur fermentum est ac diam hendrerit pretium. 
+            Mauris vel tristique nulla. <br><br>Praesent quis tellus eget tellus luctus pulvinar vitae id lacus.
+            Phasellus iaculis dolor augue, ac malesuada enim tristique et. Mauris tincidunt quam ac justo
+            lacinia, a auctor elit semper. Phasellus ac interdum mi. Nullam at ultrices est, sit amet
+            feugiat purus. Suspendisse pulvinar ante vitae sem laoreet, id tempor neque aliquam. Proin
+            porta eu mi eu varius.Nam eget tincidunt ante. Donec vitae risus fringilla, consequat ligula a, 
+            scelerisque justo. Nunc ante elit, molestie et metus at, congue sagittis quam. Phasellus sapien 
+            magna, vehicula porta rhoncus eu, sodales sed mauris. Praesent eget sem malesuada, dictum mi ac, 
+            lobortis nisi. Vestibulum eu vulputate leo. Integer vitae sem magna. Pellentesque ac faucibus 
+            sapien, quis ultricies purus. Pellentesque hendrerit lobortis nibh, commodo vulputate dui 
+            dignissim eget.
+        </p>
+
+        <img class="imagen" src="https://storyblok-cdn.photoroom.com/f/191576/1176x882/f95162c213/profile_picture_hero_before.webp" height="400" width="400" />
+        <a href="historial.html"><button>Historial Laboral</button></a>
+    </section>
+    
+    <section class="tarjet">
+        
+        <h2>Historial Academico</h2>
+        <label>
+            <input type="checkbox" name="formacion" value="Colegio">
+            Colegio
+        </label>
+        <br><br>
+        <label>
+            <input type="checkbox" name="formacion" value="Universidad">
+            Universidad
+        </label>
+        <br><br>
+        <label>
+            <input type="checkbox" name="formacion" value="CursosyDiplomados">
+            Cursos y Diplomados
+        </label>
+        <br><br>
+        <button onclick="agregarcurso()">Agregar</button>
+        <input type="text" id="curso" placeholder="...">
+        <div id="listacursos"></div>
+        <script src="portafolio.js"></script>
+    </section>
+
+
+   
+</body>
+</html>
