@@ -9,7 +9,7 @@ body {
 }
 .presentacion{
     font-size: 50px;
-    margin-left: 800px;
+    text-align: center;
     margin-top: 50px   
 }
 .tarjeta{
@@ -30,9 +30,10 @@ a {
     background-color: hsl(0, 0%, 1%); 
 }
 .imagen{
-    margin-top: -1000px;
+    margin-top: -2000px;
     border-radius: 10%;
     margin-left: 15px;
+
 }
 
 .formacion{
