@@ -16,3 +16,12 @@ function agregarlabor() {
         document.getElementById("labor").value = "";
     }
 }
+function agregarhabilidad() {
+    let habilidades = document.getElementById("habilidades").value;
+    if (habilidades != ""){
+        let nuevahabilidades = document.createElement("p");
+        nuevahabilidades.textContent = habilidades;
+        document.getElementById("listahabilidades").appendChild(nuevahabilidades);
+        document.getElementById("habilidades").value = "";
+    }
+}
