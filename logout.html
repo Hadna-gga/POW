@@ -11,8 +11,7 @@
     <header>
         <h1>Del Campo a Tu Mesa</h1>
         <nav>
-            <button><a href="login.html">Iniciar sesión</a></button>
-            <button><a href="registro.html">Registrarme</a></button>
+            <button><a href="index.html">Cerrar sesión</a></button>
         </nav>
     </header>
 
@@ -21,10 +20,35 @@
             <input type="text" placeholder="¿Qué producto estás buscando?">
             <button>Buscar</button>
         </section>
+        <section class="filtros">
+            <div class="filtros-opciones">
 
-        <section class="bienvenida">
-            <h2>Bienvenido a Del Campo a Tu Mesa</h2>
-            <p>Conecta directamente con productores locale y encuentra alimentos frescos.</p>
+                <div class="filtro">
+                    <label for="ciudad">Ciudad</label>
+                    <select id="ciudad">
+                        <option value="">Todas las ciudades</option>
+                        <option value="cali">Cali</option>
+                        <option value="palmira">Palmira</option>
+                        <option value="jamundi">Jamundí</option>
+                        <option value="yumbo">Yumbo</option>
+                        <option value="candelaria">Candelaria</option>
+                    </select>
+                </div>
+
+                <div class="filtro">
+                    <label for="categoria">Categoría</label>
+                    <select id="categoria">
+                        <option value="">Todas las categorías</option>
+                        <option value="frutas">Frutas</option>
+                        <option value="verduras">Verduras</option>
+                        <option value="legumbres">Legumbres</option>
+                        <option value="tuberculos">Tubérculos</option>
+                        <option value="granos">Granos y cereales</option>
+                        <option value="hierbas">Hierbas y plantas</option>
+                    </select>
+                </div>
+                <button type="button">Filtrar</button>
+            </div>
         </section>
 
         <section class="productos">
@@ -83,7 +107,6 @@
                     <div class="imagen-producto">
                         🍇
                     </div>
-
                     <h3>Uvas</h3>
                     <p>Uvas frescas de productor local.</p>
                     <strong>$5.000 / kg</strong>
@@ -117,7 +140,6 @@
                     <h3>Cereza</h3>
                     <p>Fresas cultivadas por productores locales.</p>
                     <strong>$4.000 / kg</strong>
-
                     <button>Agregar al carrito</button>
                 </div>
 
@@ -162,7 +184,6 @@
                 </div>
             </div>
         </section>
-        
         <a href="carrito.html" class="boton-carrito">
             🛒
             <span>0</span>
