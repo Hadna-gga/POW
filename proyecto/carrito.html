@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Del Campo a Tu Mesa</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <header>
+        <h1>Del Campo a Tu Mesa</h1>
+        <nav>
+            <button><a href="login.html">Iniciar sesión</a></button>
+            <button><a href="registro.html">Registrarme</a></button>
+        </nav>
+    </header>
+
+    <main class="carrito-pagina">
+        <a href="index.html" class="volver">
+            ← Volver a la tienda
+        </a>
+
+        <h1>Mi carrito</h1>
+        <div class="carrito-contenido">
+            <section class="lista-carrito">
+                <h2>Productos seleccionados</h2>
+                <div class="producto-carrito">
+                    <label class="seleccionar">
+                        <input type="checkbox">
+                    </label>
+                    <div class="producto-carrito-imagen">
+                        🥕
+                    </div>
+                    <div class="producto-carrito-info">
+                        <h3>Zanahoria</h3>
+                        <p>$3.000 / kg</p>
+                    </div>
+                    <div class="cantidad">
+                        <button>-</button>
+                        <span>1</span>
+                        <button>+</button>
+                    </div>
+                    <button class="eliminar">
+                        Eliminar
+                    </button>
+                </div>
+
+                <div class="producto-carrito">
+
+                    <label class="seleccionar">
+                        <input type="checkbox">
+                    </label>
+                    <div class="producto-carrito-imagen">
+                        🥬
+                    </div>
+                    <div class="producto-carrito-info">
+                        <h3>Lechuga</h3>
+                        <p>$4.000</p>
+                    </div>
+                    <div class="cantidad">
+                        <button>-</button>
+                        <span>1</span>
+                        <button>+</button>
+                    </div>
+                    <button class="eliminar">
+                        Eliminar
+                    </button>
+                </div>
+            </section>
+
+            <section class="informacion-pago">
+                <h2>Información de pago</h2>
+                <h3>Método de pago</h3>
+                <label>
+                    <input type="radio" name="pago">
+                    Tarjeta de crédito
+                </label>
+                <label>
+                    <input type="radio" name="pago">
+                    Tarjeta débito
+                </label>
+                <label>
+                    <input type="radio" name="pago">
+                    Otro medio de pago
+                </label>
+                <div class="resumen">
+                    <p>Subtotal: $7.000</p>
+                    <p>Envío: $0</p>
+                    <p class="total">
+                        Total: $7.000
+                    </p>
+                </div>
+
+                <button class="comprar">
+                    Realizar compra
+                </button>
+            </section>
+        </div>
+    </main>
+</body>
+</html>
