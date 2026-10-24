@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detalles del autor</title>
+  <link rel="stylesheet" href="css/styles.css">
+
+</head>
+
+<body>
+  <main class="autor">
+    <h1>Detalles del autor</h1>
+
+    <a class="volver" href="index.html">← Volver a los cómics</a>
+  </main>
+
+  <script type="module">
+    import { listarAutores } from "./api.js";
+
+    const contenido = document.getElementById("contenido");
+
+    async function cargarAutor() {
+      try {
+        const parametros = new URLSearchParams(window.location.search);
+        const id = parametros.get("id");
+
+        if (!id) {
+          contenido.textContent = "No se indicó el ID del autor.";
+          contenido.className = "error";
+          return;
+        }
+
+        const autores = await listarAutores();
+
+        const autor = autores.find(
+          (autor) => String(autor._id) === id
+        );
+
+        if (!autor) {
+          contenido.textContent = "No se encontró el autor.";
+          contenido.className = "error";
+          return;
+        }
+
+        contenido.replaceChildren();
+
+        const nombre = document.createElement("h2");
+        nombre.textContent = autor.nombre || "Autor sin nombre";
+        contenido.append(nombre);
+
+        const etiquetas = {
+          nacionalidad: "Nacionalidad",
+          fechaNacimiento: "Fecha de nacimiento",
+          biografia: "Biografía",
+          descripcion: "Descripción"
+        };
+
+        for (const [campo, valor] of Object.entries(autor)) {
+          if (
+            ["_id", "__v", "nombre", "createdAt", "updatedAt"].includes(campo) ||
+            valor === null ||
+            valor === undefined ||
+            valor === ""
+          ) {
+            continue;
+          }
+
+          const dato = document.createElement("p");
+          dato.className = "dato";
+
+          const etiqueta = document.createElement("strong");
+          etiqueta.textContent = etiquetas[campo] || campo;
+
+          const texto = document.createElement("span");
+
+          texto.textContent =
+            typeof valor === "object"
+              ? JSON.stringify(valor)
+              : String(valor);
+
+          dato.append(etiqueta, texto);
+          contenido.append(dato);
+        }
+      } catch (error) {
+        contenido.textContent =
+          "No se pudo cargar el autor: " + error.message;
+        contenido.className = "error";
+      }
+    }
+
+    cargarAutor();
+  </script>
+</body>
+</html>
