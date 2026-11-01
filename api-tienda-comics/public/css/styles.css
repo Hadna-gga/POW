@@ -177,3 +177,42 @@ button.secundario {
   color: #8f0f19;
   border: 1px solid #c1121f;
 }
+/* ---------- Botón y página de detalle del autor ---------- */
+.btn-detalle,
+.volver {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  background: var(--color-primario);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.btn-detalle:hover,
+.volver:hover {
+  filter: brightness(0.9);
+}
+
+.volver {
+  background: var(--color-suave);
+  margin-top: 0;
+}
+
+.datos-autor {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.4rem 1.5rem;
+  margin: 0;
+}
+
+.datos-autor dt {
+  font-weight: 600;
+  color: var(--color-suave);
+}
+
+.datos-autor dd {
+  margin: 0;
+}

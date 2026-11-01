@@ -5,56 +5,58 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Detalles del autor</title>
   <link rel="stylesheet" href="css/styles.css">
-
 </head>
 
 <body>
-  <main class="autor">
-    <h1>Detalles del autor</h1>
+  <header class="encabezado">
+    <h1>🦸 Tienda de Cómics</h1>
+    <p>Detalles del autor</p>
+  </header>
 
-    <a class="volver" href="index.html">← Volver a los cómics</a>
+  <main class="contenedor">
+    <p><a class="volver" href="index.html">← Volver a los cómics</a></p>
+
+    <section class="tarjeta" id="contenido">Cargando...</section>
   </main>
 
   <script type="module">
-    import { listarAutores } from "./api.js";
+    import { obtenerAutor } from "./js/api.js";
 
     const contenido = document.getElementById("contenido");
 
+    const etiquetas = {
+      nacionalidad: "Nacionalidad",
+      fechaNacimiento: "Fecha de nacimiento",
+      biografia: "Biografía",
+      descripcion: "Descripción"
+    };
+
+    function formatearFecha(iso) {
+      return new Date(iso).toLocaleDateString("es-CO", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        timeZone: "UTC"
+      });
+    }
+
     async function cargarAutor() {
       try {
-        const parametros = new URLSearchParams(window.location.search);
-        const id = parametros.get("id");
+        const id = new URLSearchParams(window.location.search).get("id");
 
         if (!id) {
           contenido.textContent = "No se indicó el ID del autor.";
-          contenido.className = "error";
+          contenido.className = "mensaje error";
           return;
         }
 
-        const autores = await listarAutores();
-
-        const autor = autores.find(
-          (autor) => String(autor._id) === id
-        );
-
-        if (!autor) {
-          contenido.textContent = "No se encontró el autor.";
-          contenido.className = "error";
-          return;
-        }
+        const autor = await obtenerAutor(id);
 
         contenido.replaceChildren();
 
         const nombre = document.createElement("h2");
         nombre.textContent = autor.nombre || "Autor sin nombre";
         contenido.append(nombre);
-
-        const etiquetas = {
-          nacionalidad: "Nacionalidad",
-          fechaNacimiento: "Fecha de nacimiento",
-          biografia: "Biografía",
-          descripcion: "Descripción"
-        };
 
         for (const [campo, valor] of Object.entries(autor)) {
           if (
@@ -67,25 +69,20 @@
           }
 
           const dato = document.createElement("p");
-          dato.className = "dato";
 
           const etiqueta = document.createElement("strong");
-          etiqueta.textContent = etiquetas[campo] || campo;
+          etiqueta.textContent = (etiquetas[campo] || campo) + ": ";
 
           const texto = document.createElement("span");
-
           texto.textContent =
-            typeof valor === "object"
-              ? JSON.stringify(valor)
-              : String(valor);
+            campo === "fechaNacimiento" ? formatearFecha(valor) : String(valor);
 
           dato.append(etiqueta, texto);
           contenido.append(dato);
         }
       } catch (error) {
-        contenido.textContent =
-          "No se pudo cargar el autor: " + error.message;
-        contenido.className = "error";
+        contenido.textContent = "No se pudo cargar el autor: " + error.message;
+        contenido.className = "mensaje error";
       }
     }
 

@@ -1,9 +1,8 @@
-
 import { listarAutores, crearAutor, listarComics, crearComic } from "./api.js";
-
+ 
 // 1. Referencias al DOM
 const $ = (id) => document.getElementById(id);
-
+ 
 const formFiltros = $("form-filtros");
 const filtroAutor = $("filtro-autor");
 const filtroEditorial = $("filtro-editorial");
@@ -14,7 +13,7 @@ const mensaje = $("mensaje");
 const formAutor = $("form-autor");
 const formComic = $("form-comic");
 const comicAutor = $("comic-autor");
-
+ 
 // 2. Utilidades
 function crearElemento(etiqueta, texto, clase) {
   const elemento = document.createElement(etiqueta);
@@ -22,113 +21,106 @@ function crearElemento(etiqueta, texto, clase) {
   if (clase) elemento.className = clase;
   return elemento;
 }
-
+ 
 let temporizadorMensaje;
-
+ 
 function mostrarMensaje(texto, tipo = "ok") {
   mensaje.textContent = texto;
   mensaje.className = `mensaje ${tipo}`;
   mensaje.hidden = false;
-
+ 
   clearTimeout(temporizadorMensaje);
   temporizadorMensaje = setTimeout(() => {
     mensaje.hidden = true;
   }, 5000);
 }
-
+ 
 function limpiarVacios(objeto) {
   return Object.fromEntries(
     Object.entries(objeto).filter(([, valor]) => valor !== "")
   );
 }
-
+ 
 const formatoPeso = new Intl.NumberFormat("es-CO", {
   style: "currency",
   currency: "COP",
   maximumFractionDigits: 0
 });
-
+ 
 function llenarSelect(select, opciones, textoInicial) {
   const seleccionado = select.value;
-
+ 
   select.replaceChildren(new Option(textoInicial, ""));
   opciones.forEach(({ valor, texto }) => {
     select.add(new Option(texto, valor));
   });
-
+ 
   select.value = seleccionado;
   if (select.selectedIndex === -1) select.selectedIndex = 0;
 }
-
+ 
 // 3. Dibujar resultados
 function renderComics(comics) {
   listaComics.replaceChildren();
-
+ 
   contador.textContent =
     comics.length === 1
       ? "1 cómic encontrado"
       : `${comics.length} cómics encontrados`;
-
+ 
   if (comics.length === 0) {
     listaComics.append(
       crearElemento("p", "No se encontraron cómics con ese filtro.", "vacio")
     );
     return;
   }
-
+ 
   comics.forEach((comic) => {
     const tarjeta = document.createElement("article");
     tarjeta.className = "comic";
-
-    const autor = comic.autor;
-
+ 
     tarjeta.append(
       crearElemento("h3", comic.titulo),
-      crearElemento("p", `✍️ ${autor?.nombre ?? "Autor desconocido"}`)
-    );
-
-    // Enlace a los detalles del autor
-    if (autor?._id) {
-      const enlace = crearElemento("a", "Ver detalles del autor");
-      enlace.href = `autor.html?id=${encodeURIComponent(autor._id)}`;
-      tarjeta.append(enlace);
-    }
-
-    tarjeta.append(
+      crearElemento("p", `✍️ ${comic.autor?.nombre ?? "Autor desconocido"}`),
       crearElemento(
         "p",
-        [comic.editorial, comic.anioPublicacion]
-          .filter(Boolean)
-          .join(" · ")
+        [comic.editorial, comic.anioPublicacion].filter(Boolean).join(" · ")
       ),
       crearElemento("p", formatoPeso.format(comic.precio), "precio"),
       crearElemento("p", `Stock: ${comic.stock}`)
     );
-
+ 
+    // Botón que abre la página de detalle del autor
+    if (comic.autor?._id) {
+      const enlace = crearElemento("a", "Ver detalles del autor", "btn-detalle");
+      enlace.href = `autor.html?id=${encodeURIComponent(comic.autor._id)}`;
+      tarjeta.append(enlace);
+    }
+ 
     listaComics.append(tarjeta);
   });
 }
-
+ 
 // 4. Cargar datos desde la API
 async function cargarAutores() {
   const autores = await listarAutores();
-
+ 
   const opciones = autores.map((autor) => ({
     valor: autor._id,
     texto: autor.nombre
   }));
-
+ 
   llenarSelect(filtroAutor, opciones, "Todos los autores");
   llenarSelect(comicAutor, opciones, "Seleccione un autor");
 }
-
+ 
 async function cargarEditoriales() {
   const comics = await listarComics();
-
+ 
   const editoriales = [
     ...new Set(comics.map((comic) => comic.editorial).filter(Boolean))
   ].sort();
-
+ 
   llenarSelect(
     filtroEditorial,
     editoriales.map((editorial) => ({
@@ -138,18 +130,19 @@ async function cargarEditoriales() {
     "Todas las editoriales"
   );
 }
-
+ 
 async function buscar() {
   const comics = await listarComics({
     autor: filtroAutor.value,
     editorial: filtroEditorial.value
   });
-
+ 
   renderComics(comics);
 }
-
+ 
 // 5. Eventos
-
+ 
+// Filtrar automáticamente al cambiar un select
 filtroAutor.addEventListener("change", async () => {
   try {
     await buscar();
@@ -157,7 +150,7 @@ filtroAutor.addEventListener("change", async () => {
     mostrarMensaje(error.message, "error");
   }
 });
-
+ 
 filtroEditorial.addEventListener("change", async () => {
   try {
     await buscar();
@@ -165,81 +158,80 @@ filtroEditorial.addEventListener("change", async () => {
     mostrarMensaje(error.message, "error");
   }
 });
-
+ 
 // Filtrar cómics
 formFiltros.addEventListener("submit", async (evento) => {
   evento.preventDefault();
-
+ 
   try {
     await buscar();
   } catch (error) {
     mostrarMensaje(error.message, "error");
   }
 });
-
+ 
 // Limpiar filtros
 btnLimpiar.addEventListener("click", async () => {
   formFiltros.reset();
-
+ 
   try {
     await buscar();
   } catch (error) {
     mostrarMensaje(error.message, "error");
   }
 });
-
+ 
 // Agregar autor
 formAutor.addEventListener("submit", async (evento) => {
   evento.preventDefault();
-
+ 
   try {
     const datos = limpiarVacios(
       Object.fromEntries(new FormData(formAutor))
     );
-
+ 
     const autor = await crearAutor(datos);
-
+ 
     mostrarMensaje(`Autor "${autor.nombre}" guardado correctamente`);
-
+ 
     formAutor.reset();
     await cargarAutores();
   } catch (error) {
     mostrarMensaje(error.message, "error");
   }
 });
-
+ 
 // Agregar cómic
 formComic.addEventListener("submit", async (evento) => {
   evento.preventDefault();
-
+ 
   try {
     const datos = limpiarVacios(
       Object.fromEntries(new FormData(formComic))
     );
-
-  datos.precio = Number(datos.precio);
-
-
+ 
+    datos.precio = Number(datos.precio);
+ 
     if (datos.anioPublicacion) {
       datos.anioPublicacion = Number(datos.anioPublicacion);
     }
-
+ 
     if (datos.stock) {
       datos.stock = Number(datos.stock);
     }
-
+ 
     const comic = await crearComic(datos);
-
+ 
     mostrarMensaje(`Cómic "${comic.titulo}" guardado correctamente`);
-
+ 
     formComic.reset();
-
+ 
     await Promise.all([cargarEditoriales(), buscar()]);
   } catch (error) {
     mostrarMensaje(error.message, "error");
   }
 });
-
+ 
 // 6. Arranque
 async function iniciar() {
   try {
@@ -252,5 +244,6 @@ async function iniciar() {
     );
   }
 }
-
+ 
 iniciar();
+ 

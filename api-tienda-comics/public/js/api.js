@@ -21,6 +21,9 @@ async function peticion(ruta, opciones = {}) {
 // ---------- Autores ----------
 
 // GET /api/autores
+export function obtenerAutor(id) {
+  return peticion(`/autores/${id}`);
+}
 export function listarAutores() {
   return peticion("/autores");
 }
