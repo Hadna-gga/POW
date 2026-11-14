@@ -3,74 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perfil del productor</title>
+    <title>Editar producto | Del Campo a Tu Mesa</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    
-     
+    <a class="skip-link" href="#main">Saltar al contenido principal</a>
     <div class="pagina-productor">
         <aside class="barra-lateral">
             <h2>Productor</h2>
-            <nav>
+            <nav aria-label="Navegación del productor">
                 <a href="perfil-productor.html">
-                    <span>👤</span>
+                    <span aria-hidden="true">👤</span><span class="nav-label">Perfil</span>
                 </a>
-                <h4>Perfil</h4>
                 <a href="productos-productor.html">
-                    <span>📦</span>
+                    <span aria-hidden="true">📦</span><span class="nav-label">Productos</span>
                 </a>
-                <h4>Productos</h4>
                 <a href="inventario-productor.html">
-                    <span>🗃️</span>
+                    <span aria-hidden="true">🗃️</span><span class="nav-label">Inventario</span>
                 </a>
-                <h4>Inventario</h4>
-
                 <a href="productor.html">
-                    <span>↩️</span>
+                    <span aria-hidden="true">↩️</span><span class="nav-label">Inicio</span>
                 </a>
-                <h4>Inicio</h4>
-
                 <a href="index.html">
-                    <span>🏠</span>
+                    <span aria-hidden="true">🏠</span><span class="nav-label">Página principal</span>
                 </a>
-                <h4>Pagina Principal</h4>
             </nav>
         </aside>
-            
-            <div class="editar-producto">
-                <div class="edicion-producto">
-                    <div class="editar-imagen-producto">
-                        🥬
-                    </div>
-                    <button>Reemplazar imagen</button>
-                     <div class="edicion">
-                        <label>Nombre:</label>
-                        <input type="text" value="Lechuga" disabled>
-                    </div>
-                    <div class="edicion">
-                        <label>Descripcion:</label>
-                        <input type="text" value="Frijoles de buena calidad" disabled>
-                    </div>
-                    <div class="edicion">
-                        <label>Precio:</label>
-                        <input type="text" value="$5.000 / kg" disabled>
-                    </div>
-                    <div class="edicion">
-                        <label>Cantidad:</label>
-                        <input type="text" value="70" disabled>
-                    </div>
-                
-                    <div class="buttons">
-                        <a href="productos-productor.html">
-                            <button>Guardar</button>
-                        </a>
-                        <a href="productos-productor.html">
-                            <button>Eliminar</button>
-                        </a>
-                    </div>
+
+        <main id="main" class="editar-producto">
+            <form class="edicion-producto" action="productos-productor.html" method="get">
+                <h1>Editar producto</h1>
+                <div class="editar-imagen-producto" aria-hidden="true">🥬</div>
+                <label for="imagen-producto">Reemplazar imagen del producto</label>
+                <input id="imagen-producto" type="file" accept="image/*">
+                <div class="edicion">
+                    <label for="nombre-producto">Nombre:</label>
+                    <input id="nombre-producto" type="text" value="Lechuga" required>
                 </div>
-            </div>
+                <div class="edicion">
+                    <label for="descripcion-producto">Descripción:</label>
+                    <textarea id="descripcion-producto" rows="3" required>Frijoles de buena calidad</textarea>
+                </div>
+                <div class="edicion">
+                    <label for="precio-producto">Precio por kg:</label>
+                    <input id="precio-producto" type="number" min="0" step="0.01" value="5000" required>
+                </div>
+                <div class="edicion">
+                    <label for="cantidad-producto">Cantidad disponible:</label>
+                    <input id="cantidad-producto" type="number" min="0" step="1" value="70" required>
+                </div>
+                <button type="submit">Guardar cambios</button>
+                <a class="button-link danger-link" href="productos-productor.html">Eliminar producto</a>
+                <a class="button-link" href="productos-productor.html">Cancelar</a>
+            </form>
+        </main>
     </div> 
 </body>
 </html>

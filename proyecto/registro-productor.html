@@ -3,52 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro - Del Campo a Tu Mesa</title>
+    <title>Registro de productor | Del Campo a Tu Mesa</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
+    <a class="skip-link" href="#main">Saltar al contenido principal</a>
     <header>
         <h1>Del Campo a Tu Mesa</h1>
-        <nav>
-            <button><a href="index.html">Inicio</a></button>
-            <button><a href="login.html">Iniciar sesión</a></button>
+        <nav aria-label="Navegación principal">
+            <a href="index.html">Inicio</a>
+            <a href="login.html">Iniciar sesión</a>
         </nav>
     </header>
 
-    <main>
-        <section class="formulario">
+    <main id="main">
+        <form class="formulario" action="productor.html" method="get">
             <h2>Crear una cuenta</h2>
 
             <label for="nombre">Nombre</label>
             <input
                 type="text"
                 id="nombre"
+                autocomplete="name"
+                required
                 placeholder="Ingrese su nombre"
             >
             <label for="correo">Correo</label>
             <input
                 type="email"
                 id="correo"
+                autocomplete="email"
+                required
                 placeholder="Ingrese su correo"
             >
             <label for="contrasena">Contraseña</label>
             <input
                 type="password"
                 id="contrasena"
+                autocomplete="new-password"
+                required
                 placeholder="Establezca una contraseña"
             >
             <div class="accept">
-                <label>
-                    <input type="checkbox" name="accept" value="condition">
-                    <h6>Esta pagina trabaja con un porcentaje minimo de comision 
+                <input type="checkbox" id="accept-commission" required>
+                <label for="accept-commission">
+                    Esta pagina trabaja con un porcentaje minimo de comision
                     calculada de acuerdo con el valor total de la venta (5%).<br>
                     Al seleccionar esto acepto la comisión correspondiente a 
-                    mi  compra.</h6>
+                    mi compra.
                 </label>
             </div>
-            <button><a href = "productor.html">Registrarme</a></button>
-        </section>
+            <button type="submit">Registrarme</button>
+        </form>
 
     </main>
     <footer>

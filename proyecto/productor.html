@@ -3,42 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel del productor</title>
+    <title>Panel del productor | Del Campo a Tu Mesa</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
+    <a class="skip-link" href="#main">Saltar al contenido principal</a>
 
     <div class="pagina-productor">
             <aside class="barra-lateral">
         <h2>Productor</h2>
-        <nav>
+        <nav aria-label="Navegación del productor">
             <a href="perfil-productor.html">
-                <span>👤</span>
+                <span aria-hidden="true">👤</span><span class="nav-label">Perfil</span>
             </a>
-            <h4>Perfil</h4>
             <a href="productos-productor.html">
-                <span>📦</span>
+                <span aria-hidden="true">📦</span><span class="nav-label">Productos</span>
             </a>
-            <h4>Productos</h4>
             <a href="inventario-productor.html">
-                <span>🗃️</span>
+                <span aria-hidden="true">🗃️</span><span class="nav-label">Inventario</span>
             </a>
-            <h4>Inventario</h4>
 
             <a href="productor.html">
-                <span>↩️</span>
+                <span aria-hidden="true">↩️</span><span class="nav-label">Inicio</span>
             </a>
-            <h4>Inicio</h4>
 
             <a href="index.html">
-                <span>🏠</span>
+                <span aria-hidden="true">🏠</span><span class="nav-label">Página principal</span>
             </a>
-            <h4>Pagina Principal</h4>
         </nav>
     </aside>
 
-        <main class="contenido">
+        <main id="main" class="contenido">
             <h1>Bienvenido, productor</h1>
             <p>Desde aquí puedes administrar tus productos e inventario.</p>
         </main>

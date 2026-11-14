@@ -8,25 +8,22 @@
 </head>
 
 <body>
+    <a class="skip-link" href="#main">Saltar al contenido principal</a>
     <header>
         <h1>Del Campo a Tu Mesa</h1>
-        <nav>
-            <button><a href="index.html">Inicio</a></button>
-            <button><a href="login.html">Iniciar sesión</a></button>
+        <nav aria-label="Navegación principal">
+            <a href="index.html">Inicio</a>
+            <a href="login.html">Iniciar sesión</a>
         </nav>
     </header>
 
-    <main>
+    <main id="main">
         <section class="formulario">
             <h2>Crear una cuenta</h2>
             <div class="tipo-usuario">
                 <h3>¿Cómo quieres registrarte?</h3>
-                <button>
-                    <a href="registro-productor.html">Soy productor</a>
-                </button>
-                <button>
-                    <a href="registro-consumidor.html">Soy consumidor</a>
-                </button>
+                <a class="button-link" href="registro-productor.html">Soy productor</a>
+                <a class="button-link" href="registro-consumidor.html">Soy consumidor</a>
             </div>
         </section>
     </main>

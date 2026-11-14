@@ -3,20 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Del Campo a Tu Mesa</title>
+    <title>Carrito | Del Campo a Tu Mesa</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
+    <a class="skip-link" href="#main">Saltar al contenido principal</a>
     <header>
         <h1>Del Campo a Tu Mesa</h1>
-        <nav>
-            <button><a href="login.html">Iniciar sesión</a></button>
-            <button><a href="registro.html">Registrarme</a></button>
+        <nav aria-label="Navegación principal">
+            <a href="login.html">Iniciar sesión</a>
+            <a href="registro.html">Registrarme</a>
         </nav>
     </header>
 
-    <main class="carrito-pagina">
+    <main id="main" class="carrito-pagina">
         <a href="index.html" class="volver">
             ← Volver a la tienda
         </a>
@@ -27,9 +28,9 @@
                 <h2>Productos seleccionados</h2>
                 <div class="producto-carrito">
                     <label class="seleccionar">
-                        <input type="checkbox">
+                        <input type="checkbox" aria-label="Seleccionar zanahoria">
                     </label>
-                    <div class="producto-carrito-imagen">
+                    <div class="producto-carrito-imagen" aria-hidden="true">
                         🥕
                     </div>
                     <div class="producto-carrito-info">
@@ -37,11 +38,11 @@
                         <p>$3.000 / kg</p>
                     </div>
                     <div class="cantidad">
-                        <button>-</button>
+                        <button type="button" aria-label="Reducir cantidad de zanahoria">-</button>
                         <span>1</span>
-                        <button>+</button>
+                        <button type="button" aria-label="Aumentar cantidad de zanahoria">+</button>
                     </div>
-                    <button class="eliminar">
+                    <button type="button" class="eliminar" aria-label="Eliminar zanahoria del carrito">
                         Eliminar
                     </button>
                 </div>
@@ -49,9 +50,9 @@
                 <div class="producto-carrito">
 
                     <label class="seleccionar">
-                        <input type="checkbox">
+                        <input type="checkbox" aria-label="Seleccionar lechuga">
                     </label>
-                    <div class="producto-carrito-imagen">
+                    <div class="producto-carrito-imagen" aria-hidden="true">
                         🥬
                     </div>
                     <div class="producto-carrito-info">
@@ -59,11 +60,11 @@
                         <p>$4.000</p>
                     </div>
                     <div class="cantidad">
-                        <button>-</button>
+                        <button type="button" aria-label="Reducir cantidad de lechuga">-</button>
                         <span>1</span>
-                        <button>+</button>
+                        <button type="button" aria-label="Aumentar cantidad de lechuga">+</button>
                     </div>
-                    <button class="eliminar">
+                    <button type="button" class="eliminar" aria-label="Eliminar lechuga del carrito">
                         Eliminar
                     </button>
                 </div>
@@ -71,19 +72,21 @@
 
             <section class="informacion-pago">
                 <h2>Información de pago</h2>
-                <h3>Método de pago</h3>
-                <label>
-                    <input type="radio" name="pago">
-                    Tarjeta de crédito
-                </label>
-                <label>
-                    <input type="radio" name="pago">
-                    Tarjeta débito
-                </label>
-                <label>
-                    <input type="radio" name="pago">
-                    Otro medio de pago
-                </label>
+                <fieldset class="metodos-pago">
+                    <legend>Método de pago</legend>
+                    <label>
+                        <input type="radio" name="pago" value="credito">
+                        Tarjeta de crédito
+                    </label>
+                    <label>
+                        <input type="radio" name="pago" value="debito">
+                        Tarjeta débito
+                    </label>
+                    <label>
+                        <input type="radio" name="pago" value="otro">
+                        Otro medio de pago
+                    </label>
+                </fieldset>
                 <div class="resumen">
                     <p>Subtotal: $7.000</p>
                     <p>Envío: $0</p>
@@ -92,7 +95,7 @@
                     </p>
                 </div>
 
-                <button class="comprar">
+                <button type="button" class="comprar">
                     Realizar compra
                 </button>
             </section>

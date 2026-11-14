@@ -8,31 +8,36 @@
 </head>
 
 <body>
+    <a class="skip-link" href="#main">Saltar al contenido principal</a>
     <header>
         <h1>Del Campo a Tu Mesa</h1>
-        <nav>
-            <button><a href="index.html">Inicio</a></button>
-            <button><a href="registro.html">Registrarme</a></button>
+        <nav aria-label="Navegación principal">
+            <a href="index.html">Inicio</a>
+            <a href="registro.html">Registrarme</a>
         </nav>
     </header>
 
-    <main>
-        <section class="formulario">
+    <main id="main">
+        <form class="formulario" action="logout.html" method="get">
             <h2>Iniciar sesión</h2>
             <label for="correo">Correo</label>
             <input
                 type="email"
                 id="correo"
+                autocomplete="username"
+                required
                 placeholder="Ingrese su correo"
             >
             <label for="contrasena">Contraseña</label>
             <input
                 type="password"
                 id="contrasena"
+                autocomplete="current-password"
+                required
                 placeholder="Ingrese su contraseña"
             >
-            <button><a href="logout.html">Iniciar sesión</a></button>
-        </section>
+            <button type="submit">Iniciar sesión</button>
+        </form>
     </main>
 
     <footer>

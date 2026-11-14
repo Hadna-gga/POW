@@ -3,23 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Del Campo a Tu Mesa</title>
+    <title>Inicio | Del Campo a Tu Mesa</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
+    <a class="skip-link" href="#main">Saltar al contenido principal</a>
     <header>
         <h1>Del Campo a Tu Mesa</h1>
-        <nav>
-            <button><a href="login.html">Iniciar sesión</a></button>
-            <button><a href="registro.html">Registrarme</a></button>
+        <nav aria-label="Navegación principal">
+            <a href="login.html">Iniciar sesión</a>
+            <a href="registro.html">Registrarme</a>
         </nav>
     </header>
 
-    <main>
+    <main id="main" class="catalogo-con-carrito">
         <section class="busqueda">
-            <input type="text" placeholder="¿Qué producto estás buscando?">
-            <button>Buscar</button>
+            <label class="visually-hidden" for="busqueda-productos">Buscar productos</label>
+            <input id="busqueda-productos" type="search" placeholder="¿Qué producto estás buscando?">
+            <button type="button">Buscar</button>
         </section>
 
         <section class="bienvenida">
@@ -31,7 +33,7 @@
             <h2>Verduras</h2>
             <div class="productos-container">
                 <div class="producto">
-                    <div class="imagen-producto">
+                    <div class="imagen-producto" aria-hidden="true">
                         🥕
                     </div>
                     <h3>Zanahoria</h3>
@@ -40,9 +42,8 @@
                     <button>Agregar al carrito</button>
                 </div>
 
-                <div class="productos-container">
                 <div class="producto">
-                    <div class="imagen-producto">
+                    <div class="imagen-producto" aria-hidden="true">
                         🥬
                     </div>
                     <h3>Lechuga</h3>
@@ -51,9 +52,8 @@
                     <button>Agregar al carrito</button>
                 </div>
 
-                <div class="productos-container">
                 <div class="producto">
-                    <div class="imagen-producto">
+                    <div class="imagen-producto" aria-hidden="true">
                         🥦
                     </div>
                     <h3>Brocoli</h3>
@@ -62,9 +62,8 @@
                     <button>Agregar al carrito</button>
                 </div>
 
-                <div class="productos-container">
                 <div class="producto">
-                    <div class="imagen-producto">
+                    <div class="imagen-producto" aria-hidden="true">
                         🧅
                     </div>
                     <h3>Cebolla</h3>
@@ -72,6 +71,7 @@
                     <strong>$5.000 / kg</strong>
                     <button>Agregar al carrito</button>
                 </div>
+            </div>
         </section>
 
         <br>
@@ -80,7 +80,7 @@
             <h2>Frutas</h2>
             <div class="productos-container">
                 <div class="producto">
-                    <div class="imagen-producto">
+                    <div class="imagen-producto" aria-hidden="true">
                         🍇
                     </div>
 
@@ -91,7 +91,7 @@
                 </div>
 
                 <div class="producto">
-                    <div class="imagen-producto">
+                    <div class="imagen-producto" aria-hidden="true">
                         🍓
                     </div>
                     <h3>Fresas</h3>
@@ -101,7 +101,7 @@
                 </div>
 
                 <div class="producto">
-                    <div class="imagen-producto">
+                    <div class="imagen-producto" aria-hidden="true">
                         🍉
                     </div>
                     <h3>Sandia</h3>
@@ -111,7 +111,7 @@
                 </div>
 
                 <div class="producto">
-                    <div class="imagen-producto">
+                    <div class="imagen-producto" aria-hidden="true">
                         🍒
                     </div>
                     <h3>Cereza</h3>
@@ -122,7 +122,7 @@
                 </div>
 
                 <div class="producto">
-                    <div class="imagen-producto">
+                    <div class="imagen-producto" aria-hidden="true">
                         🍎
                     </div>
                     <h3>Manzana</h3>
@@ -132,7 +132,7 @@
                 </div>
 
                 <div class="producto">
-                    <div class="imagen-producto">
+                    <div class="imagen-producto" aria-hidden="true">
                         🍌
                     </div>
                     <h3>Banano</h3>
@@ -142,7 +142,7 @@
                 </div>
 
                 <div class="producto">
-                    <div class="imagen-producto">
+                    <div class="imagen-producto" aria-hidden="true">
                         🍑
                     </div>
                     <h3>Melocoton</h3>
@@ -152,7 +152,7 @@
                 </div>
 
                 <div class="producto">
-                    <div class="imagen-producto">
+                    <div class="imagen-producto" aria-hidden="true">
                         🍊
                     </div>
                     <h3>Naranja</h3>
@@ -163,8 +163,8 @@
             </div>
         </section>
         
-        <a href="carrito.html" class="boton-carrito">
-            🛒
+        <a href="carrito.html" class="boton-carrito" aria-label="Abrir carrito">
+            <span aria-hidden="true">🛒</span>
             <span>0</span>
         </a>
     </main>
