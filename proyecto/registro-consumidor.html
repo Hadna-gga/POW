@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,38 +19,21 @@
     </header>
 
     <main id="main">
-        <form class="formulario" action="logout.html" method="get">
+        <form class="formulario" id="formulario-registro">
             <h2>Crear una cuenta</h2>
             <label for="nombre">Nombre</label>
-            <input
-                type="text"
-                id="nombre"
-                autocomplete="name"
-                required
-                placeholder="Ingrese su nombre"
-            >
+            <input type="text" id="nombre" autocomplete="name" required placeholder="Ingrese su nombre">
             <label for="correo">Correo</label>
-            <input
-                type="email"
-                id="correo"
-                autocomplete="email"
-                required
-                placeholder="Ingrese su correo"
-            >
+            <input type="email" id="correo" autocomplete="email" required placeholder="Ingrese su correo">
             <label for="contrasena">Contraseña</label>
-            <input
-                type="password"
-                id="contrasena"
-                autocomplete="new-password"
-                required
-                placeholder="Establezca una contraseña"
-            >
+            <input type="password" id="contrasena" autocomplete="new-password" required
+                placeholder="Establezca una contraseña">
             <div class="accept">
                 <input type="checkbox" id="accept-commission" required>
                 <label for="accept-commission">
                     Esta pagina trabaja con un porcentaje minimo de comision
                     calculada de acuerdo con el valor total de la venta (5%).<br>
-                    Al seleccionar esto acepto la comisión correspondiente a 
+                    Al seleccionar esto acepto la comisión correspondiente a
                     mi compra.
                 </label>
             </div>
@@ -62,5 +46,46 @@
         <p>Comisión solidaria transparente</p>
     </footer>
 
+    <script>
+        const API_REGISTRO = "https://literate-space-train-wvgwjp7j766gcv4qr-3000.app.github.dev/api/usuarios/registro";
+
+        document.getElementById("formulario-registro").addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const nombre = document.getElementById("nombre").value.trim();
+            const correo = document.getElementById("correo").value.trim();
+            const contrasena = document.getElementById("contrasena").value;
+
+            try {
+                const respuesta = await fetch(API_REGISTRO, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        nombre: nombre,
+                        correo: correo,
+                        contrasena: contrasena,
+                        rol: "consumidor"
+                    })
+                });
+
+                const datos = await respuesta.json();
+
+                if (respuesta.ok) {
+                    alert("Cuenta creada correctamente");
+                    window.location.href = "login.html";
+                } else {
+                    alert(datos.mensaje || "No se pudo crear la cuenta");
+                }
+
+            } catch (error) {
+                console.error(error);
+                alert("No se pudo conectar con el servidor");
+            }
+        });
+    </script>
+
 </body>
+
 </html>

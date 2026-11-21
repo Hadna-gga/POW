@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,24 +19,13 @@
     </header>
 
     <main id="main">
-        <form class="formulario" action="logout.html" method="get">
+        <form class="formulario" id="formulario-login">
             <h2>Iniciar sesión</h2>
             <label for="correo">Correo</label>
-            <input
-                type="email"
-                id="correo"
-                autocomplete="username"
-                required
-                placeholder="Ingrese su correo"
-            >
+            <input type="email" id="correo" autocomplete="username" required placeholder="Ingrese su correo">
             <label for="contrasena">Contraseña</label>
-            <input
-                type="password"
-                id="contrasena"
-                autocomplete="current-password"
-                required
-                placeholder="Ingrese su contraseña"
-            >
+            <input type="password" id="contrasena" autocomplete="current-password" required
+                placeholder="Ingrese su contraseña">
             <button type="submit">Iniciar sesión</button>
         </form>
     </main>
@@ -45,6 +35,54 @@
         <p>Comisión solidaria transparente</p>
     </footer>
 
-</body>
-</html>
+    <script>
+        const API_LOGIN = "https://literate-space-train-wvgwjp7j766gcv4qr-3000.app.github.dev/api/usuarios/login";
 
+        document.getElementById("formulario-login").addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const correo = document.getElementById("correo").value.trim();
+            const contrasena = document.getElementById("contrasena").value;
+
+            try {
+                const respuesta = await fetch(API_LOGIN, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        correo: correo,
+                        contrasena: contrasena
+                    })
+                });
+
+                const datos = await respuesta.json();
+
+
+                if (respuesta.ok) {
+                    // Guardar el token y los datos del usuario
+                    sessionStorage.setItem("token", datos.token);
+                    sessionStorage.setItem("usuario", JSON.stringify(datos.usuario));
+
+                    alert("Inicio de sesión correcto");
+
+                    if (datos.usuario.rol === "productor") {
+                        window.location.href = "productor.html";
+                    } else if (datos.usuario.rol === "consumidor") {
+                        window.location.href = "index.html";
+                    }
+                }
+                else {
+                    alert(datos.mensaje || "No se pudo iniciar sesión");
+                }
+
+            } catch (error) {
+                console.error(error);
+                alert("No se pudo conectar con el servidor");
+            }
+        });
+    </script>
+
+</body>
+
+</html>

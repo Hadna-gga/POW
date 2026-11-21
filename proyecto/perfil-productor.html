@@ -1,63 +1,108 @@
+
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Perfil del productor | Del Campo a Tu Mesa</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <a class="skip-link" href="#main">Saltar al contenido principal</a>
-    
-     
+
     <div class="pagina-productor">
         <aside class="barra-lateral">
             <h2>Productor</h2>
+
             <nav aria-label="Navegación del productor">
                 <a href="perfil-productor.html">
-                    <span aria-hidden="true">👤</span><span class="nav-label">Perfil</span>
+                    <span aria-hidden="true">👤</span>
+                    <span class="nav-label">Perfil</span>
                 </a>
+
                 <a href="productos-productor.html">
-                    <span aria-hidden="true">📦</span><span class="nav-label">Productos</span>
+                    <span aria-hidden="true">📦</span>
+                    <span class="nav-label">Productos</span>
                 </a>
+
                 <a href="inventario-productor.html">
-                    <span aria-hidden="true">🗃️</span><span class="nav-label">Inventario</span>
+                    <span aria-hidden="true">🗃️</span>
+                    <span class="nav-label">Inventario</span>
                 </a>
+
                 <a href="productor.html">
-                    <span aria-hidden="true">↩️</span><span class="nav-label">Inicio</span>
+                    <span aria-hidden="true">↩️</span>
+                    <span class="nav-label">Inicio</span>
                 </a>
+
                 <a href="index.html">
-                    <span aria-hidden="true">🏠</span><span class="nav-label">Página principal</span>
+                    <span aria-hidden="true">🏠</span>
+                    <span class="nav-label">Página principal</span>
                 </a>
+
+                <button type="button" id="cerrar-sesion">
+                    <span aria-hidden="true">🚪</span>
+                    <span class="nav-label">Cerrar sesión</span>
+                </button>
             </nav>
         </aside>
 
         <main id="main" class="contenido-perfil">
-
             <h1>Mi perfil</h1>
             <span aria-hidden="true">👤</span>
+
             <div class="dato">
                 <label for="ciudad">Ciudad:</label>
-                <input id="ciudad" type="text" value="Cali" readonly>
+                <input id="ciudad" type="text" placeholder="No registrada" readonly>
             </div>
 
             <div class="dato">
                 <label for="nombre">Nombre:</label>
-                <input id="nombre" type="text" value="Pepito" readonly>
+                <input id="nombre" type="text" readonly>
             </div>
 
             <div class="dato">
                 <label for="correo">Correo:</label>
-                <input id="correo" type="email" value="productor@gmail.com" readonly>
+                <input id="correo" type="email" readonly>
             </div>
 
             <div class="dato">
                 <label for="telefono">Teléfono:</label>
-                <input id="telefono" type="tel" value="3001234567" readonly>
+                <input id="telefono" type="tel" placeholder="No registrado" readonly>
             </div>
 
-            <button type="button">Editar perfil</button>
+            <button type="button" id="editar-perfil">Editar perfil</button>
         </main>
     </div>
+
+    <script>
+        const usuario = JSON.parse(
+            sessionStorage.getItem("usuario") || "null"
+        );
+
+        const token = sessionStorage.getItem("token");
+
+        if (!usuario || usuario.rol !== "productor" || !token) {
+            alert("Debes iniciar sesión como productor");
+            window.location.replace("login.html");
+        } else {
+            document.getElementById("nombre").value = usuario.nombre;
+            document.getElementById("correo").value = usuario.correo;
+        }
+
+        document.getElementById("cerrar-sesion").addEventListener("click", function () {
+            sessionStorage.removeItem("token");
+            sessionStorage.removeItem("usuario");
+
+            window.location.replace("login.html");
+        });
+
+        document.getElementById("editar-perfil").addEventListener("click", function () {
+            alert("La edición del perfil todavía no está disponible");
+        });
+    </script>
 </body>
+
 </html>

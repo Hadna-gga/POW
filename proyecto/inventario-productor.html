@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventario del productor | Del Campo a Tu Mesa</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <a class="skip-link" href="#main">Saltar al contenido principal</a>
-    
-     
+
+
     <div class="pagina-productor">
         <aside class="barra-lateral">
             <h2>Productor</h2>
@@ -29,6 +31,10 @@
                 <a href="index.html">
                     <span aria-hidden="true">🏠</span><span class="nav-label">Página principal</span>
                 </a>
+                <button type="button" id="cerrar-sesion">
+                    <span aria-hidden="true">🚪</span>
+                    <span class="nav-label">Cerrar sesión</span>
+                </button>
             </nav>
         </aside>
 
@@ -51,22 +57,83 @@
                         <th scope="col">Estado</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td>Manzanas</td>
-                        <td>15</td>
-                        <td>$4.000</td>
-                        <td>Disponible</td>
-                    </tr>
-                    <tr>
-                        <td>Lechuga</td>
-                        <td>8</td>
-                        <td>$8.000</td>
-                        <td>Disponible</td>
-                    </tr>
+                <tbody id="lista-inventario">
                 </tbody>
             </table>
         </main>
     </div>
+
+    <script>
+        async function cargarInventario() {
+            const tabla = document.getElementById("lista-inventario");
+            const token = sessionStorage.getItem("token");
+            const usuario = JSON.parse(
+                sessionStorage.getItem("usuario") || "null"
+            );
+
+            if (!token || !usuario || usuario.rol !== "productor") {
+                alert("Debes iniciar sesión como productor");
+                window.location.replace("login.html");
+                return;
+            }
+
+            try {
+                const respuesta = await fetch(
+                    "https://literate-space-train-wvgwjp7j766gcv4qr-3000.app.github.dev/api/productos/mis-productos",
+                    {
+                        headers: {
+                            "Authorization": "Bearer " + token
+                        }
+                    }
+                );
+
+                if (!respuesta.ok) {
+                    throw new Error("No se pudo consultar el inventario");
+                }
+
+                const productos = await respuesta.json();
+                tabla.innerHTML = "";
+
+                if (productos.length === 0) {
+                    const fila = tabla.insertRow();
+                    const celda = fila.insertCell();
+                    celda.colSpan = 4;
+                    celda.textContent = "Todavía no tienes productos registrados.";
+                    return;
+                }
+
+                productos.forEach(producto => {
+                    const fila = tabla.insertRow();
+
+                    fila.insertCell().textContent = producto.nombre;
+                    fila.insertCell().textContent = producto.cantidad;
+                    fila.insertCell().textContent =
+                        "$" + producto.precio.toLocaleString("es-CO");
+
+                    fila.insertCell().textContent =
+                        producto.cantidad > 0 ? "Disponible" : "Agotado";
+                });
+
+            } catch (error) {
+                console.error(error);
+                tabla.innerHTML = "";
+                const fila = tabla.insertRow();
+                const celda = fila.insertCell();
+                celda.colSpan = 4;
+                celda.textContent = "No se pudo cargar el inventario.";
+            }
+        }
+
+        cargarInventario();
+    </script>
+    <script>
+        document.getElementById("cerrar-sesion").addEventListener("click", function () {
+            sessionStorage.removeItem("token");
+            sessionStorage.removeItem("usuario");
+
+            window.location.replace("login.html");
+        });
+    </script>
 </body>
+
 </html>

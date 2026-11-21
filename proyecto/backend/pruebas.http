@@ -1,0 +1,33 @@
+### Publicar producto
+POST http://localhost:3000/api/productos
+Content-Type: application/json
+
+{
+  "nombre": "Tomate",
+  "descripcion": "Tomates frescos cultivados por campesinos locales",
+  "precio": 3000,
+  "imagen": "",
+  "cantidad": 20,
+  "campesino": "Kevin"
+}
+
+### Consultar productos
+GET http://localhost:3000/api/productos
+
+### Eliminar producto
+DELETE http://localhost:3000/api/productos/6b011168430aa08316c411fd
+
+### Agregar producto al carrito
+POST http://localhost:3000/api/carrito/comprador1/productos
+Content-Type: application/json
+
+{
+  "productoId": "6b0113996e1c46b43f25a90b",
+  "cantidad": 2
+}
+
+### Consultar carrito de compras
+GET http://localhost:3000/api/carrito/comprador1
+
+### Eliminar producto del carrito
+DELETE http://localhost:3000/api/carrito/comprador1/productos/6b0113996e1c46b43f25a90b
