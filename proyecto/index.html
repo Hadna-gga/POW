@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicio | Del Campo a Tu Mesa</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <a class="skip-link" href="#main">Saltar al contenido principal</a>
+
+    <header>
+        <h1>Del Campo a Tu Mesa</h1>
+        <nav aria-label="Navegación principal" id="menu-usuario">
+            <a href="login.html">Iniciar sesión</a>
+            <a href="registro.html">Registrarme</a>
+        </nav>
+    </header>
+
+
+    <main id="main" class="catalogo-con-carrito">
+        <section class="busqueda">
+            <label class="visually-hidden" for="busqueda-productos">Buscar productos</label>
+            <input id="busqueda-productos" type="search" placeholder="¿Qué producto estás buscando?">
+            <button type="button">Buscar</button>
+        </section>
+
+        <section class="bienvenida">
+            <h2>Bienvenido a Del Campo a Tu Mesa</h2>
+            <p>Conecta directamente con productores locale y encuentra alimentos frescos.</p>
+        </section>
+
+        <section class="productos">
+            <h2>Verduras</h2>
+            <div class="productos-container" id="lista-verduras">
+            </div>
+        </section>
+
+        <br>
+        <section class="productos">
+
+            <h2>Frutas</h2>
+            <div class="productos-container">
+                <div class="producto">
+                    <div class="imagen-producto" aria-hidden="true">
+                        🍇
+                    </div>
+
+                    <h3>Uvas</h3>
+                    <p>Uvas frescas de productor local.</p>
+                    <strong>$5.000 / kg</strong>
+                    <button>Agregar al carrito</button>
+                </div>
+
+                <div class="producto">
+                    <div class="imagen-producto" aria-hidden="true">
+                        🍓
+                    </div>
+                    <h3>Fresas</h3>
+                    <p>Fresas cultivadas por productores locales.</p>
+                    <strong>$4.000 / kg</strong>
+                    <button>Agregar al carrito</button>
+                </div>
+
+                <div class="producto">
+                    <div class="imagen-producto" aria-hidden="true">
+                        🍉
+                    </div>
+                    <h3>Sandia</h3>
+                    <p>Fresas cultivadas por productores locales.</p>
+                    <strong>$4.000 / kg</strong>
+                    <button>Agregar al carrito</button>
+                </div>
+
+                <div class="producto">
+                    <div class="imagen-producto" aria-hidden="true">
+                        🍒
+                    </div>
+                    <h3>Cereza</h3>
+                    <p>Fresas cultivadas por productores locales.</p>
+                    <strong>$4.000 / kg</strong>
+
+                    <button>Agregar al carrito</button>
+                </div>
+
+                <div class="producto">
+                    <div class="imagen-producto" aria-hidden="true">
+                        🍎
+                    </div>
+                    <h3>Manzana</h3>
+                    <p>Fresas cultivadas por productores locales.</p>
+                    <strong>$4.000 / kg</strong>
+                    <button>Agregar al carrito</button>
+                </div>
+
+                <div class="producto">
+                    <div class="imagen-producto" aria-hidden="true">
+                        🍌
+                    </div>
+                    <h3>Banano</h3>
+                    <p>Fresas cultivadas por productores locales.</p>
+                    <strong>$4.000 / kg</strong>
+                    <button>Agregar al carrito</button>
+                </div>
+
+                <div class="producto">
+                    <div class="imagen-producto" aria-hidden="true">
+                        🍑
+                    </div>
+                    <h3>Melocoton</h3>
+                    <p>Fresas cultivadas por productores locales.</p>
+                    <strong>$4.000 / kg</strong>
+                    <button>Agregar al carrito</button>
+                </div>
+
+                <div class="producto">
+                    <div class="imagen-producto" aria-hidden="true">
+                        🍊
+                    </div>
+                    <h3>Naranja</h3>
+                    <p>Fresas cultivadas por productores locales.</p>
+                    <strong>$4.000 / kg</strong>
+                    <button>Agregar al carrito</button>
+                </div>
+            </div>
+        </section>
+
+        <a href="carrito.html" class="boton-carrito" aria-label="Abrir carrito">
+            <span aria-hidden="true">🛒</span>
+            <span id="contador-carrito">0</span>
+        </a>
+    </main>
+
+    <footer>
+        <p>Del Campo a Tu Mesa</p>
+        <p>Comisión solidaria transparente</p>
+    </footer>
+    <script>
+        const API_PRODUCTOS = "https://literate-space-train-wvgwjp7j766gcv4qr-3000.app.github.dev/api/productos";
+        const API_CARRITO = "https://literate-space-train-wvgwjp7j766gcv4qr-3000.app.github.dev/api/carrito";
+
+        const usuario = JSON.parse(sessionStorage.getItem("usuario") || "null");
+        const token = sessionStorage.getItem("token");
+
+        async function cargarVerduras() {
+            const contenedor = document.getElementById("lista-verduras");
+
+            try {
+                const respuesta = await fetch(API_PRODUCTOS);
+
+                if (!respuesta.ok) {
+                    throw new Error("Error al consultar los productos");
+                }
+
+                const productos = await respuesta.json();
+
+                contenedor.innerHTML = "";
+
+                if (productos.length === 0) {
+                    contenedor.textContent = "Todavía no hay productos publicados.";
+                    return;
+                }
+
+                productos.forEach(producto => {
+                    const tarjeta = document.createElement("div");
+                    tarjeta.className = "producto";
+
+                    const imagen = document.createElement("div");
+                    imagen.className = "imagen-producto";
+                    imagen.setAttribute("aria-hidden", "true");
+                    imagen.textContent = "📦";
+
+                    const nombre = document.createElement("h3");
+                    nombre.textContent = producto.nombre;
+
+                    const descripcion = document.createElement("p");
+                    descripcion.textContent = producto.descripcion;
+
+                    const precio = document.createElement("strong");
+                    precio.textContent = "$" + producto.precio.toLocaleString("es-CO") + " / kg";
+
+                    const boton = document.createElement("button");
+                    boton.type = "button";
+                    boton.textContent = "Agregar al carrito";
+                    boton.addEventListener("click", async function () {
+                        try {
+                            if (!usuario || usuario.rol !== "consumidor" || !token) {
+                                alert("Debes iniciar sesión como consumidor para comprar");
+                                window.location.href = "login.html";
+                                return;
+                            }
+
+                            const respuesta = await fetch(
+                                API_CARRITO + "/" + usuario.id + "/productos",
+                                {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                        "Authorization": "Bearer " + token
+                                    },
+                                    body: JSON.stringify({
+                                        productoId: producto._id,
+                                        cantidad: 1
+                                    })
+                                }
+                            );
+
+                            const datos = await respuesta.json();
+
+                            if (respuesta.ok) {
+                                alert("Producto agregado al carrito correctamente");
+                                await actualizarContadorCarrito();
+                            } else {
+                                alert(datos.mensaje || "No se pudo agregar el producto");
+                            }
+
+                        } catch (error) {
+                            console.error(error);
+                            alert("No se pudo conectar con el servidor");
+                        }
+                    });
+
+                    tarjeta.append(imagen, nombre, descripcion, precio, boton);
+                    contenedor.appendChild(tarjeta);
+                });
+
+            } catch (error) {
+                console.error(error);
+                contenedor.textContent = "No se pudieron cargar los productos.";
+            }
+        }
+        // ACTUALIZAR CONTADOR DEL CARRITO
+        async function actualizarContadorCarrito() {
+
+            try {
+                if (!usuario || usuario.rol !== "consumidor" || !token) {
+                    document.getElementById("contador-carrito").textContent = "0";
+                    return;
+                }
+
+                const respuesta = await fetch(
+                    API_CARRITO + "/" + usuario.id,
+                    {
+                        headers: {
+                            "Authorization": "Bearer " + token
+                        }
+                    }
+                );
+
+
+                if (!respuesta.ok) {
+                    throw new Error("Error al consultar el carrito");
+                }
+
+                const carrito = await respuesta.json();
+
+                const totalProductos = carrito.productos.reduce(
+                    (total, item) => total + item.cantidad, 0
+                );
+
+                document.getElementById("contador-carrito").textContent = totalProductos;
+
+            } catch (error) {
+                console.error("Error al actualizar el carrito:", error);
+            }
+        }
+        cargarVerduras();
+        actualizarContadorCarrito();
+    </script>
+
+    <script>
+        function actualizarMenuUsuario() {
+            const menu = document.getElementById("menu-usuario");
+            const usuarioActual = JSON.parse(
+                sessionStorage.getItem("usuario") || "null"
+            );
+
+            if (!usuarioActual || !sessionStorage.getItem("token")) {
+                return;
+            }
+
+            menu.innerHTML = "";
+
+            const saludo = document.createElement("span");
+            saludo.textContent = "Hola, " + usuarioActual.nombre;
+
+            const botonCerrar = document.createElement("button");
+            botonCerrar.type = "button";
+            botonCerrar.textContent = "Cerrar sesión";
+
+            botonCerrar.addEventListener("click", function () {
+                sessionStorage.removeItem("token");
+                sessionStorage.removeItem("usuario");
+
+                window.location.href = "login.html";
+            });
+
+            menu.append(saludo, botonCerrar);
+        }
+
+        actualizarMenuUsuario();
+    </script>
+
+</body>
+
+</html>

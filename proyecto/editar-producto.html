@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar producto | Del Campo a Tu Mesa</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <a class="skip-link" href="#main">Saltar al contenido principal</a>
+    <div class="pagina-productor">
+        <aside class="barra-lateral">
+            <h2>Productor</h2>
+            <nav aria-label="Navegación del productor">
+                <a href="perfil-productor.html">
+                    <span aria-hidden="true">👤</span><span class="nav-label">Perfil</span>
+                </a>
+                <a href="productos-productor.html">
+                    <span aria-hidden="true">📦</span><span class="nav-label">Productos</span>
+                </a>
+                <a href="inventario-productor.html">
+                    <span aria-hidden="true">🗃️</span><span class="nav-label">Inventario</span>
+                </a>
+                <a href="productor.html">
+                    <span aria-hidden="true">↩️</span><span class="nav-label">Inicio</span>
+                </a>
+                <a href="index.html">
+                    <span aria-hidden="true">🏠</span><span class="nav-label">Página principal</span>
+                </a>
+                <button type="button" id="cerrar-sesion">
+                    <span aria-hidden="true">🚪</span>
+                    <span class="nav-label">Cerrar sesión</span>
+                </button>
+            </nav>
+        </aside>
+
+        <main id="main" class="editar-producto">
+            <form class="edicion-producto" id="form-editar-producto">
+                <h1>Editar producto</h1>
+                <div class="editar-imagen-producto" aria-hidden="true">🥬</div>
+                <label for="imagen-producto">Reemplazar imagen del producto</label>
+                <input id="imagen-producto" type="file" accept="image/*">
+                <div class="edicion">
+                    <label for="nombre-producto">Nombre:</label>
+                    <input id="nombre-producto" type="text" required>
+                </div>
+                <div class="edicion">
+                    <label for="descripcion-producto">Descripción:</label>
+                    <textarea id="descripcion-producto" rows="3" required></textarea>
+                </div>
+                <div class="edicion">
+                    <label for="precio-producto">Precio por kg:</label>
+                    <input id="precio-producto" type="number" min="0" step="0.01" required>
+                </div>
+                <div class="edicion">
+                    <label for="cantidad-producto">Cantidad disponible:</label>
+                    <input id="cantidad-producto" type="number" min="0" step="1" required>
+                </div>
+                <button type="submit">Guardar cambios</button>
+                <a class="button-link danger-link" href="productos-productor.html">Eliminar producto</a>
+                <a class="button-link" href="productos-productor.html">Cancelar</a>
+            </form>
+        </main>
+    </div>
+    <script>
+        const parametros = new URLSearchParams(window.location.search);
+        const productoId = parametros.get("id");
+
+        if (!productoId) {
+            alert("Debes seleccionar un producto para editar");
+            window.location.replace("productos-productor.html");
+        }
+    </script>
+
+    <script>
+        async function cargarProductoParaEditar() {
+            const token = sessionStorage.getItem("token");
+            const usuario = JSON.parse(
+                sessionStorage.getItem("usuario") || "null"
+            );
+
+            if (!token || !usuario || usuario.rol !== "productor") {
+                window.location.replace("login.html");
+                return;
+            }
+
+            if (!productoId) return;
+
+            try {
+                const respuesta = await fetch(
+                    "https://literate-space-train-wvgwjp7j766gcv4qr-3000.app.github.dev/api/productos/mis-productos",
+                    {
+                        headers: {
+                            "Authorization": "Bearer " + token
+                        }
+                    }
+                );
+
+                if (!respuesta.ok) {
+                    throw new Error("No se pudieron consultar tus productos");
+                }
+
+                const productos = await respuesta.json();
+                const producto = productos.find(p => p._id === productoId);
+
+                if (!producto) {
+                    alert("No se encontró el producto en tu cuenta");
+                    window.location.replace("productos-productor.html");
+                    return;
+                }
+
+                document.getElementById("nombre-producto").value = producto.nombre;
+                document.getElementById("descripcion-producto").value = producto.descripcion;
+                document.getElementById("precio-producto").value = producto.precio;
+                document.getElementById("cantidad-producto").value = producto.cantidad;
+
+            } catch (error) {
+                console.error(error);
+                alert("Error al cargar los datos del producto");
+            }
+        }
+
+        cargarProductoParaEditar();
+    </script>
+
+    <script>
+        document.getElementById("form-editar-producto").addEventListener("submit", async function (evento) {
+            evento.preventDefault();
+
+            const token = sessionStorage.getItem("token");
+
+            if (!token || !productoId) {
+                alert("Debes iniciar sesión y seleccionar un producto");
+                return;
+            }
+
+            const productoActualizado = {
+                nombre: document.getElementById("nombre-producto").value,
+                descripcion: document.getElementById("descripcion-producto").value,
+                precio: Number(document.getElementById("precio-producto").value),
+                cantidad: Number(document.getElementById("cantidad-producto").value)
+            };
+
+            try {
+                const respuesta = await fetch(
+                    "https://literate-space-train-wvgwjp7j766gcv4qr-3000.app.github.dev/api/productos/" + productoId,
+                    {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": "Bearer " + token
+                        },
+                        body: JSON.stringify(productoActualizado)
+                    }
+                );
+
+                const datos = await respuesta.json();
+
+                if (!respuesta.ok) {
+                    throw new Error(datos.mensaje || "No se pudo actualizar el producto");
+                }
+
+                alert("Producto actualizado correctamente");
+                window.location.href = "productos-productor.html";
+
+            } catch (error) {
+                console.error(error);
+                alert(error.message);
+            }
+        });
+    </script>
+    <script>
+        document.getElementById("cerrar-sesion").addEventListener("click", function () {
+            sessionStorage.removeItem("token");
+            sessionStorage.removeItem("usuario");
+
+            window.location.replace("login.html");
+        });
+    </script>
+</body>
+
+</html>
