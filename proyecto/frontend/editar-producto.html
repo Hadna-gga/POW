@@ -90,7 +90,7 @@
 
             try {
                 const respuesta = await fetch(
-                    "https://literate-space-train-wvgwjp7j766gcv4qr-3000.app.github.dev/api/productos/mis-productos",
+                    "/api/productos/mis-productos",
                     {
                         headers: {
                             "Authorization": "Bearer " + token
@@ -145,7 +145,7 @@
 
             try {
                 const respuesta = await fetch(
-                    "https://literate-space-train-wvgwjp7j766gcv4qr-3000.app.github.dev/api/productos/" + productoId,
+                    "/api/productos/" + productoId,
                     {
                         method: "PUT",
                         headers: {

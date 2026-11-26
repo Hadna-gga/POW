@@ -11,15 +11,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 // Mostrar las páginas HTML del proyecto
-app.use(express.static(path.join(__dirname, "..")));
+app.use(express.static(path.join(__dirname, "..", "frontend")));
 
 // Conectar MongoDB
 conectarDB();
 
-// Ruta principal
-app.get("/", (req, res) => {
-    res.send("Backend de Del Campo a tu Mesa funcionando");
-});
 
 // Rutas de productos
 const productoRoutes = require("./routes/productoRoutes");

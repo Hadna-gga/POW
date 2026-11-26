@@ -68,7 +68,7 @@
             window.location.href = "login.html";
         }
 
-        const API_CARRITO = "https://literate-space-train-wvgwjp7j766gcv4qr-3000.app.github.dev/api/carrito/" + (usuario ? usuario.id : "");
+        const API_CARRITO = "/api/carrito/" + (usuario ? usuario.id : "");
 
 
         async function cargarCarrito() {
