@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Carrito | Del Campo a Tu Mesa</title>
     <link rel="stylesheet" href="style.css">
+    <script src="js/mensajes.js"></script>
+    <script src="js/sesion.js"></script>
 </head>
 
 <body>
@@ -68,7 +70,7 @@
             window.location.href = "login.html";
         }
 
-        const API_CARRITO = "https://literate-space-train-wvgwjp7j766gcv4qr-3000.app.github.dev/api/carrito/" + (usuario ? usuario.id : "");
+        const API_CARRITO = "/api/carrito/" + (usuario ? usuario.id : "");
 
 
         async function cargarCarrito() {

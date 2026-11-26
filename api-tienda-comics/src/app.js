@@ -1,14 +1,22 @@
+
 import "dotenv/config";
 import express from "express";
+import cors from "cors";
+import passport from "passport";
+
 import { conectarDB } from "./config/db.js";
 import autoresRoutes from "./routes/autores.routes.js";
 import comicsRoutes from "./routes/comics.routes.js";
+import authRoutes from "./routes/auth.routes.js";
+
+import "./config/passport.js";
 
 const app = express();
 
-// Middleware: permite leer el cuerpo de las peticiones en formato JSON
+app.use(cors({ origin: process.env.CLIENT_URL }));
 app.use(express.json());
-app.use(express.static("public")); // ← NUEVO: sirve los archivos de la carpeta public
+app.use(express.static("public"));
+app.use(passport.initialize());
 
 // Ruta de prueba
 app.get("/", (req, res) => {
@@ -18,6 +26,7 @@ app.get("/", (req, res) => {
 // Rutas de la API
 app.use("/api/autores", autoresRoutes);
 app.use("/api/comics", comicsRoutes);
+app.use("/api/auth", authRoutes);
 
 // Middleware para rutas inexistentes
 app.use((req, res) => {
@@ -26,9 +35,10 @@ app.use((req, res) => {
 
 const PORT = process.env.PORT || 3000;
 
-// Primero conectamos a la base de datos y luego levantamos el servidor
 conectarDB().then(() => {
   app.listen(PORT, () => {
     console.log(`Servidor escuchando en http://localhost:${PORT}`);
   });
+}).catch((err) => {
+  console.error("Error de conexión a MongoDB:", err);
 });

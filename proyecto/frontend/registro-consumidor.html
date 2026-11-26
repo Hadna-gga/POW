@@ -4,8 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro de productor | Del Campo a Tu Mesa</title>
+    <title>Registro de consumidor | Del Campo a Tu Mesa</title>
     <link rel="stylesheet" href="style.css">
+    <script src="js/mensajes.js"></script>
+    <script src="js/sesion.js"></script>
 </head>
 
 <body>
@@ -21,7 +23,6 @@
     <main id="main">
         <form class="formulario" id="formulario-registro">
             <h2>Crear una cuenta</h2>
-
             <label for="nombre">Nombre</label>
             <input type="text" id="nombre" autocomplete="name" required placeholder="Ingrese su nombre">
             <label for="correo">Correo</label>
@@ -40,15 +41,15 @@
             </div>
             <button type="submit">Registrarme</button>
         </form>
-
     </main>
+
     <footer>
         <p>Del Campo a Tu Mesa</p>
         <p>Comisión solidaria transparente</p>
     </footer>
 
     <script>
-        const API_REGISTRO = "https://literate-space-train-wvgwjp7j766gcv4qr-3000.app.github.dev/api/usuarios/registro";
+        const API_REGISTRO = "/api/usuarios/registro";
 
         document.getElementById("formulario-registro").addEventListener("submit", async function (event) {
             event.preventDefault();
@@ -67,14 +68,14 @@
                         nombre: nombre,
                         correo: correo,
                         contrasena: contrasena,
-                        rol: "productor"
+                        rol: "consumidor"
                     })
                 });
 
                 const datos = await respuesta.json();
 
                 if (respuesta.ok) {
-                    alert("Cuenta de productor creada correctamente");
+                    alert("Cuenta creada correctamente");
                     window.location.href = "login.html";
                 } else {
                     alert(datos.mensaje || "No se pudo crear la cuenta");

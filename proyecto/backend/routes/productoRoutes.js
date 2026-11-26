@@ -1,35 +1,53 @@
-
 const express = require("express");
 const router = express.Router();
 
 const Producto = require("../models/Producto");
 const Usuario = require("../models/Usuario");
 const { verificarToken, soloProductor } = require("../middleware/auth");
+const { validarObjectId } = require("../middleware/validar");
 
-// PUBLICAR PRODUCTO
+// Valida el cuerpo de un producto. Devuelve un mensaje de error o null si es válido.
+function validarDatosProducto({ nombre, descripcion, precio, cantidad, imagen }) {
+    if (typeof nombre !== "string" || !nombre.trim()) {
+        return "El nombre es obligatorio";
+    }
+    if (typeof descripcion !== "string" || !descripcion.trim()) {
+        return "La descripción es obligatoria";
+    }
+    if (typeof precio !== "number" || !Number.isFinite(precio) || precio < 0) {
+        return "El precio debe ser un número mayor o igual a cero";
+    }
+    if (!Number.isInteger(cantidad) || cantidad < 0) {
+        return "La cantidad debe ser un número entero mayor o igual a cero";
+    }
+    if (imagen !== undefined && typeof imagen !== "string") {
+        return "La imagen no es válida";
+    }
+    return null;
+}
+
+// A3. CREAR PRODUCTO (solo productores)
 router.post("/", verificarToken, soloProductor, async (req, res) => {
     try {
+        const error = validarDatosProducto(req.body);
+
+        if (error) {
+            return res.status(400).json({ mensaje: error });
+        }
 
         const { nombre, descripcion, precio, imagen, cantidad } = req.body;
 
         const usuario = await Usuario.findById(req.usuario.id);
 
-        if (!usuario || usuario.rol !== "productor") {
-            return res.status(403).json({
-                mensaje: "No tienes permiso para publicar productos"
-            });
-        }
-
         const nuevoProducto = new Producto({
-            nombre,
-            descripcion,
+            nombre: nombre.trim(),
+            descripcion: descripcion.trim(),
             precio,
             imagen,
             cantidad,
             campesino: usuario.nombre,
             productorId: usuario._id
         });
-
 
         await nuevoProducto.save();
 
@@ -39,29 +57,24 @@ router.post("/", verificarToken, soloProductor, async (req, res) => {
         });
 
     } catch (error) {
-        res.status(400).json({
-            mensaje: "Error al publicar el producto",
-            error: error.message
-        });
+        console.error(error);
+        res.status(500).json({ mensaje: "Error al publicar el producto" });
     }
 });
 
-// CONSULTAR PRODUCTOS
+// A1. LISTAR PRODUCTOS (público)
 router.get("/", async (req, res) => {
     try {
         const productos = await Producto.find();
-
         res.json(productos);
 
     } catch (error) {
-        res.status(500).json({
-            mensaje: "Error al consultar los productos",
-            error: error.message
-        });
+        console.error(error);
+        res.status(500).json({ mensaje: "Error al consultar los productos" });
     }
 });
 
-// CONSULTAR MIS PRODUCTOS
+// LISTAR MIS PRODUCTOS (solo productores). Debe ir antes de "/:id"
 router.get("/mis-productos", verificarToken, soloProductor, async (req, res) => {
     try {
         const productos = await Producto.find({
@@ -72,23 +85,34 @@ router.get("/mis-productos", verificarToken, soloProductor, async (req, res) => 
 
     } catch (error) {
         console.error(error);
-
-        res.status(500).json({
-            mensaje: "Error al consultar tus productos"
-        });
+        res.status(500).json({ mensaje: "Error al consultar tus productos" });
     }
 });
 
-// ELIMINAR PRODUCTO
-router.delete("/:id", verificarToken, soloProductor, async (req, res) => {
+// A2. CONSULTAR EL DETALLE DE UN PRODUCTO (público)
+router.get("/:id", validarObjectId("id"), async (req, res) => {
     try {
-
         const producto = await Producto.findById(req.params.id);
 
         if (!producto) {
-            return res.status(404).json({
-                mensaje: "Producto no encontrado"
-            });
+            return res.status(404).json({ mensaje: "Producto no encontrado" });
+        }
+
+        res.json(producto);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ mensaje: "Error al consultar el producto" });
+    }
+});
+
+// A5. ELIMINAR PRODUCTO (solo el productor dueño)
+router.delete("/:id", verificarToken, soloProductor, validarObjectId("id"), async (req, res) => {
+    try {
+        const producto = await Producto.findById(req.params.id);
+
+        if (!producto) {
+            return res.status(404).json({ mensaje: "Producto no encontrado" });
         }
 
         if (!producto.productorId ||
@@ -100,27 +124,21 @@ router.delete("/:id", verificarToken, soloProductor, async (req, res) => {
 
         await Producto.findByIdAndDelete(req.params.id);
 
-        res.json({
-            mensaje: "Producto eliminado correctamente"
-        });
+        res.json({ mensaje: "Producto eliminado correctamente" });
 
     } catch (error) {
-        res.status(400).json({
-            mensaje: "Error al eliminar el producto",
-            error: error.message
-        });
+        console.error(error);
+        res.status(500).json({ mensaje: "Error al eliminar el producto" });
     }
 });
 
-// ACTUALIZAR PRODUCTO
-router.put("/:id", verificarToken, soloProductor, async (req, res) => {
+// A4. MODIFICAR PRODUCTO (solo el productor dueño). Reemplaza los campos: PUT
+router.put("/:id", verificarToken, soloProductor, validarObjectId("id"), async (req, res) => {
     try {
         const producto = await Producto.findById(req.params.id);
 
         if (!producto) {
-            return res.status(404).json({
-                mensaje: "Producto no encontrado"
-            });
+            return res.status(404).json({ mensaje: "Producto no encontrado" });
         }
 
         if (!producto.productorId ||
@@ -130,23 +148,21 @@ router.put("/:id", verificarToken, soloProductor, async (req, res) => {
             });
         }
 
-        const { nombre, descripcion, precio, cantidad } = req.body;
+        const error = validarDatosProducto(req.body);
 
-        if (
-            typeof nombre !== "string" || !nombre.trim() ||
-            typeof descripcion !== "string" || !descripcion.trim() ||
-            typeof precio !== "number" || !Number.isFinite(precio) || precio < 0 ||
-            !Number.isInteger(cantidad) || cantidad < 0
-        ) {
-            return res.status(400).json({
-                mensaje: "Revisa los datos del producto"
-            });
+        if (error) {
+            return res.status(400).json({ mensaje: error });
         }
+
+        const { nombre, descripcion, precio, cantidad, imagen } = req.body;
 
         producto.nombre = nombre.trim();
         producto.descripcion = descripcion.trim();
         producto.precio = precio;
         producto.cantidad = cantidad;
+        if (imagen !== undefined) {
+            producto.imagen = imagen;
+        }
 
         await producto.save();
 
@@ -156,10 +172,8 @@ router.put("/:id", verificarToken, soloProductor, async (req, res) => {
         });
 
     } catch (error) {
-        res.status(400).json({
-            mensaje: "Error al actualizar el producto",
-            error: error.message
-        });
+        console.error(error);
+        res.status(500).json({ mensaje: "Error al actualizar el producto" });
     }
 });
 

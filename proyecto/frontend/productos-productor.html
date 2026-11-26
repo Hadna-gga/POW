@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Productos del productor | Del Campo a Tu Mesa</title>
     <link rel="stylesheet" href="style.css">
+    <script src="js/mensajes.js"></script>
+    <script src="js/sesion.js"></script>
 </head>
 
 <body>
@@ -51,7 +53,7 @@
         </main>
     </div>
     <script>
-        const API_PRODUCTOS = "https://literate-space-train-wvgwjp7j766gcv4qr-3000.app.github.dev/api/productos";
+        const API_PRODUCTOS = "/api/productos";
         const API_MIS_PRODUCTOS = API_PRODUCTOS + "/mis-productos";
 
         async function cargarProductos() {

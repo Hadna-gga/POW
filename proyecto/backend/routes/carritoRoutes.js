@@ -1,11 +1,14 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const router = express.Router();
 
 const Carrito = require("../models/Carrito");
 const Producto = require("../models/Producto");
 
 const { verificarToken } = require("../middleware/auth");
+const { validarObjectId } = require("../middleware/validar");
 
+// AUTORIZACIÓN: solo consumidores, y solo sobre su propio carrito (C2)
 function verificarComprador(req, res, next) {
     if (req.usuario.rol !== "consumidor") {
         return res.status(403).json({
@@ -22,12 +25,17 @@ function verificarComprador(req, res, next) {
     next();
 }
 
-
 // AGREGAR PRODUCTO AL CARRITO
 router.post("/:comprador/productos", verificarToken, verificarComprador, async (req, res) => {
     try {
         const { comprador } = req.params;
         const { productoId, cantidad = 1 } = req.body;
+
+        if (!mongoose.isValidObjectId(productoId)) {
+            return res.status(400).json({
+                mensaje: "El identificador del producto no es válido"
+            });
+        }
 
         if (!Number.isInteger(cantidad) || cantidad < 1) {
             return res.status(400).json({
@@ -83,9 +91,9 @@ router.post("/:comprador/productos", verificarToken, verificarComprador, async (
         });
 
     } catch (error) {
-        res.status(400).json({
-            mensaje: "Error al agregar producto",
-            error: error.message
+        console.error(error);
+        res.status(500).json({
+            mensaje: "Error al agregar producto"
         });
     }
 });
@@ -107,15 +115,15 @@ router.get("/:comprador", verificarToken, verificarComprador, async (req, res) =
         res.json(carrito);
 
     } catch (error) {
+        console.error(error);
         res.status(500).json({
-            mensaje: "Error al consultar el carrito",
-            error: error.message
+            mensaje: "Error al consultar el carrito"
         });
     }
 });
 
 // ELIMINAR PRODUCTO DEL CARRITO
-router.delete("/:comprador/productos/:productoId", verificarToken, verificarComprador, async (req, res) => {
+router.delete("/:comprador/productos/:productoId", verificarToken, verificarComprador, validarObjectId("productoId"), async (req, res) => {
     try {
         const { comprador, productoId } = req.params;
 
@@ -147,14 +155,15 @@ router.delete("/:comprador/productos/:productoId", verificarToken, verificarComp
         });
 
     } catch (error) {
-        res.status(400).json({
-            mensaje: "Error al eliminar producto del carrito",
-            error: error.message
+        console.error(error);
+        res.status(500).json({
+            mensaje: "Error al eliminar producto del carrito"
         });
     }
 });
+
 // ACTUALIZAR CANTIDAD DE UN PRODUCTO DEL CARRITO
-router.patch("/:comprador/productos/:productoId", verificarToken, verificarComprador, async (req, res) => {
+router.patch("/:comprador/productos/:productoId", verificarToken, verificarComprador, validarObjectId("productoId"), async (req, res) => {
     try {
         const { comprador, productoId } = req.params;
         const { cantidad } = req.body;
@@ -206,10 +215,11 @@ router.patch("/:comprador/productos/:productoId", verificarToken, verificarCompr
         });
 
     } catch (error) {
+        console.error(error);
         res.status(500).json({
-            mensaje: "Error al actualizar la cantidad",
-            error: error.message
+            mensaje: "Error al actualizar la cantidad"
         });
     }
 });
+
 module.exports = router;

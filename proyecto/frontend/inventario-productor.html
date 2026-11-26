@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventario del productor | Del Campo a Tu Mesa</title>
     <link rel="stylesheet" href="style.css">
+    <script src="js/mensajes.js"></script>
+    <script src="js/sesion.js"></script>
 </head>
 
 <body>
@@ -79,7 +81,7 @@
 
             try {
                 const respuesta = await fetch(
-                    "https://literate-space-train-wvgwjp7j766gcv4qr-3000.app.github.dev/api/productos/mis-productos",
+                    "/api/productos/mis-productos",
                     {
                         headers: {
                             "Authorization": "Bearer " + token

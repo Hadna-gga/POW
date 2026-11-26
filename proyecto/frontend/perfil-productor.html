@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 
@@ -7,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Perfil del productor | Del Campo a Tu Mesa</title>
     <link rel="stylesheet" href="style.css">
+    <script src="js/mensajes.js"></script>
+    <script src="js/sesion.js"></script>
 </head>
 
 <body>
@@ -88,8 +89,31 @@
             alert("Debes iniciar sesión como productor");
             window.location.replace("login.html");
         } else {
-            document.getElementById("nombre").value = usuario.nombre;
-            document.getElementById("correo").value = usuario.correo;
+            // B3: los datos del perfil se piden a la API con el token
+            fetch("/api/usuarios/perfil", {
+                headers: { "Authorization": "Bearer " + token }
+            })
+                .then(async function (respuesta) {
+                    if (respuesta.status === 401) {
+                        sessionStorage.removeItem("token");
+                        sessionStorage.removeItem("usuario");
+                        alert("Tu sesión expiró. Inicia sesión de nuevo");
+                        window.location.replace("login.html");
+                        return;
+                    }
+
+                    if (!respuesta.ok) {
+                        throw new Error("Error al consultar el perfil");
+                    }
+
+                    const perfil = await respuesta.json();
+                    document.getElementById("nombre").value = perfil.nombre;
+                    document.getElementById("correo").value = perfil.correo;
+                })
+                .catch(function (error) {
+                    console.error(error);
+                    alert("No se pudo cargar tu perfil");
+                });
         }
 
         document.getElementById("cerrar-sesion").addEventListener("click", function () {
