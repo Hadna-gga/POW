@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productos del productor | Del Campo a Tu Mesa</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="js/mensajes.js"></script>
+    <script src="js/sesion.js"></script>
+    <script src="js/productos.js"></script>
+</head>
+
+<body>
+    <a class="skip-link" href="#main">Saltar al contenido principal</a>
+
+
+    <div class="pagina-productor">
+        <aside class="barra-lateral">
+            <h2>Productor</h2>
+            <nav aria-label="Navegación del productor">
+                <a href="perfil-productor.html">
+                    <span aria-hidden="true">👤</span><span class="nav-label">Perfil</span>
+                </a>
+                <a href="productos-productor.html">
+                    <span aria-hidden="true">📦</span><span class="nav-label">Productos</span>
+                </a>
+                <a href="inventario-productor.html">
+                    <span aria-hidden="true">🗃️</span><span class="nav-label">Inventario</span>
+                </a>
+                <a href="productor.html">
+                    <span aria-hidden="true">↩️</span><span class="nav-label">Inicio</span>
+                </a>
+                <a href="index.html">
+                    <span aria-hidden="true">🏠</span><span class="nav-label">Página principal</span>
+                </a>
+                <button type="button" id="cerrar-sesion">
+                    <span aria-hidden="true">🚪</span>
+                    <span class="nav-label">Cerrar sesión</span>
+                </button>
+            </nav>
+        </aside>
+
+        <main id="main" class="contenido-productos">
+            <a class="button-link" href="agregar-producto.html">Agregar producto</a>
+            <button type="button" class="button-link" id="btn-editar">Editar producto</button>
+            <button type="button" id="btn-eliminar">Eliminar</button>
+
+            <section class="productos">
+                <h2>Productos</h2>
+                <div class="productos-container" id="lista-productos">
+                </div>
+            </section>
+        </main>
+    </div>
+    <script>
+        const API_PRODUCTOS = "/api/productos";
+        const API_MIS_PRODUCTOS = API_PRODUCTOS + "/mis-productos";
+
+        async function cargarProductos() {
+            const contenedor = document.getElementById("lista-productos");
+
+            try {
+                const token = sessionStorage.getItem("token");
+
+                if (!token) {
+                    alert("Debes iniciar sesión como productor");
+                    window.location.href = "login.html";
+                    return;
+                }
+
+                const respuesta = await fetch(API_MIS_PRODUCTOS, {
+                    headers: {
+                        "Authorization": "Bearer " + token
+                    }
+                });
+
+                if (!respuesta.ok) {
+                    throw new Error("Error al consultar productos");
+                }
+
+                const productos = await respuesta.json();
+
+                contenedor.innerHTML = "";
+
+                const productosDelCampesino = productos;
+
+                if (productosDelCampesino.length === 0) {
+                    contenedor.textContent = "Todavía no tienes productos publicados.";
+                    return;
+                }
+
+                productosDelCampesino.forEach(producto => {
+                    const tarjeta = document.createElement("div");
+                    tarjeta.className = "producto";
+
+                    const seleccion = document.createElement("label");
+                    seleccion.className = "seleccionar";
+
+                    const checkbox = document.createElement("input");
+                    checkbox.type = "checkbox";
+                    checkbox.value = producto._id;
+                    checkbox.addEventListener("change", function () {
+                        if (checkbox.checked) {
+                            document.querySelectorAll(
+                                '#lista-productos input[type="checkbox"]'
+                            ).forEach(otro => {
+                                if (otro !== checkbox) {
+                                    otro.checked = false;
+                                }
+                            });
+                        }
+                    });
+                    checkbox.setAttribute("aria-label", "Seleccionar " + producto.nombre);
+
+                    seleccion.appendChild(checkbox);
+
+                    const imagen = document.createElement("div");
+                    imagen.className = "imagen-producto";
+                    Productos.pintarImagen(imagen, producto);
+
+                    const nombre = document.createElement("h3");
+                    nombre.textContent = producto.nombre;
+
+                    const descripcion = document.createElement("p");
+                    descripcion.textContent = producto.descripcion;
+
+                    const precio = document.createElement("strong");
+                    precio.textContent = "$" + producto.precio.toLocaleString("es-CO") + " / kg";
+
+                    tarjeta.append(seleccion, imagen, nombre, descripcion, precio);
+                    contenedor.appendChild(tarjeta);
+                });
+
+            } catch (error) {
+                console.error(error);
+                contenedor.textContent = "No se pudieron cargar los productos.";
+            }
+        }
+        document.getElementById("btn-eliminar").addEventListener("click", async function () {
+            const token = sessionStorage.getItem("token");
+
+            if (!token) {
+                alert("Debes iniciar sesión como productor");
+                window.location.href = "login.html";
+                return;
+            }
+            const seleccionados = document.querySelectorAll(
+                '#lista-productos input[type="checkbox"]:checked'
+            );
+
+            if (seleccionados.length === 0) {
+                alert("Selecciona un producto para eliminar");
+                return;
+            }
+
+            // NUEVO: confirmación dentro de la app (antes era confirm() del navegador)
+            if (!(await confirmarAccion("¿Seguro que deseas eliminar los productos seleccionados?", "Eliminar"))) {
+                return;
+            }
+
+            try {
+                for (const checkbox of seleccionados) {
+
+                    const respuesta = await fetch(API_PRODUCTOS + "/" + checkbox.value, {
+                        method: "DELETE",
+                        headers: {
+                            "Authorization": "Bearer " + token
+                        }
+                    });
+
+
+                    if (!respuesta.ok) {
+                        throw new Error("No se pudo eliminar un producto");
+                    }
+                }
+
+                alert("Producto(s) eliminado(s) correctamente");
+                await cargarProductos();
+
+            } catch (error) {
+                console.error(error);
+                alert("Ocurrió un error al eliminar los productos");
+                await cargarProductos();
+            }
+        });
+        cargarProductos();
+        document.getElementById("btn-editar").addEventListener("click", function () {
+            const seleccionado = document.querySelector(
+                '#lista-productos input[type="checkbox"]:checked'
+            );
+
+            if (!seleccionado) {
+                alert("Selecciona un producto para editar");
+                return;
+            }
+
+            window.location.href = "editar-producto.html?id=" + seleccionado.value;
+        });
+    </script>
+    <script>
+        document.getElementById("cerrar-sesion").addEventListener("click", function () {
+            sessionStorage.removeItem("token");
+            sessionStorage.removeItem("usuario");
+
+            window.location.replace("login.html");
+        });
+    </script>
+</body>
+
+</html>

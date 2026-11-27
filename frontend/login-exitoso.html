@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciando sesión | Del Campo a Tu Mesa</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="js/mensajes.js"></script>
+    <script src="js/sesion.js"></script>
+</head>
+
+<body>
+    <a class="skip-link" href="#main">Saltar al contenido principal</a>
+    <header>
+        <h1>Del Campo a Tu Mesa</h1>
+    </header>
+
+    <main id="main">
+        <section class="formulario">
+            <h2>Iniciando sesión con Google…</h2>
+            <p role="status">Un momento, estamos preparando tu cuenta.</p>
+        </section>
+    </main>
+
+    <script>
+        (async function () {
+            // El servidor deja el token en el fragmento de la URL (#token=...)
+            const params = new URLSearchParams(window.location.hash.substring(1));
+            const token = params.get("token");
+
+            // Se borra el token de la barra de direcciones y del historial
+            window.history.replaceState(null, "", window.location.pathname);
+
+            if (!token) {
+                window.location.replace("login.html?error=google");
+                return;
+            }
+
+            try {
+                // Con el token se piden los datos del usuario (el servidor los da por B3)
+                const perfil = await fetch("/api/usuarios/perfil", {
+                    headers: { "Authorization": "Bearer " + token }
+                });
+
+                if (!perfil.ok) {
+                    throw new Error("Token no válido");
+                }
+
+                const datos = await perfil.json();
+
+                Sesion.guardarSesion(token, {
+                    id: datos.id,
+                    nombre: datos.nombre,
+                    correo: datos.correo,
+                    rol: datos.rol
+                });
+
+                window.location.replace(datos.rol === "productor" ? "productor.html" : "index.html");
+
+            } catch (error) {
+                console.error(error);
+                window.location.replace("login.html?error=google");
+            }
+        })();
+    </script>
+</body>
+
+</html>

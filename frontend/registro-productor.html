@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de productor | Del Campo a Tu Mesa</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="js/mensajes.js"></script>
+    <script src="js/sesion.js"></script>
+</head>
+
+<body>
+    <a class="skip-link" href="#main">Saltar al contenido principal</a>
+    <header>
+        <h1>Del Campo a Tu Mesa</h1>
+        <nav aria-label="Navegación principal">
+            <a href="index.html">Inicio</a>
+            <a href="login.html">Iniciar sesión</a>
+        </nav>
+    </header>
+
+    <main id="main">
+        <form class="formulario" id="formulario-registro">
+            <h2>Crear una cuenta</h2>
+
+            <label for="nombre">Nombre</label>
+            <input type="text" id="nombre" autocomplete="name" required placeholder="Ingrese su nombre">
+            <label for="correo">Correo</label>
+            <input type="email" id="correo" autocomplete="email" required placeholder="Ingrese su correo">
+            <label for="contrasena">Contraseña</label>
+            <input type="password" id="contrasena" autocomplete="new-password" required
+                placeholder="Establezca una contraseña">
+            <label for="ciudad">Ciudad o municipio</label>
+            <select id="ciudad" required>
+                <option value="">¿Desde dónde vendes? (ubicación de tus productos)</option>
+            </select>
+            <div class="accept">
+                <input type="checkbox" id="accept-commission" required>
+                <label for="accept-commission">
+                    Esta pagina trabaja con un porcentaje minimo de comision
+                    calculada de acuerdo con el valor total de la venta (5%).<br>
+                    Al seleccionar esto acepto la comisión correspondiente a
+                    mi compra.
+                </label>
+            </div>
+            <button type="submit">Registrarme</button>
+        </form>
+
+    </main>
+    <footer>
+        <p>Del Campo a Tu Mesa</p>
+        <p>Comisión solidaria transparente</p>
+    </footer>
+
+    <script>
+        const API_REGISTRO = "/api/usuarios/registro";
+
+        // Mismas ciudades que el perfil: así el filtro por ubicación de la tienda queda ordenado
+        const CIUDADES = [
+            "Cali", "Candelaria", "Jamundí", "Palmira", "Yumbo", "Florida", "Pradera",
+            "Dagua", "La Cumbre", "Vijes", "Buenaventura", "Buga", "Tuluá",
+            "Cartago", "Sevilla", "Roldanillo", "Otra"
+        ];
+
+        CIUDADES.forEach(function (ciudad) {
+            const op = document.createElement("option");
+            op.value = ciudad;
+            op.textContent = ciudad;
+            document.getElementById("ciudad").appendChild(op);
+        });
+
+        document.getElementById("formulario-registro").addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const nombre = document.getElementById("nombre").value.trim();
+            const correo = document.getElementById("correo").value.trim();
+            const contrasena = document.getElementById("contrasena").value;
+            const ciudad = document.getElementById("ciudad").value.trim();
+
+            try {
+                const respuesta = await fetch(API_REGISTRO, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        nombre: nombre,
+                        correo: correo,
+                        contrasena: contrasena,
+                        ciudad: ciudad,
+                        rol: "productor"
+                    })
+                });
+
+                const datos = await respuesta.json();
+
+                if (respuesta.ok) {
+                    alert("Cuenta de productor creada correctamente");
+                    window.location.href = "login.html";
+                } else {
+                    alert(datos.mensaje || "No se pudo crear la cuenta");
+                }
+
+            } catch (error) {
+                console.error(error);
+                alert("No se pudo conectar con el servidor");
+            }
+        });
+    </script>
+
+</body>
+
+</html>

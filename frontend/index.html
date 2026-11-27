@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicio | Del Campo a Tu Mesa</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="js/mensajes.js"></script>
+    <script src="js/sesion.js"></script>
+    <script src="js/productos.js"></script>
+</head>
+
+<body>
+    <a class="skip-link" href="#main">Saltar al contenido principal</a>
+
+    <header>
+        <h1>Del Campo a Tu Mesa</h1>
+        <nav aria-label="Navegación principal" id="menu-usuario">
+            <a href="login.html">Iniciar sesión</a>
+            <a href="registro.html">Registrarme</a>
+        </nav>
+    </header>
+
+    <main id="main" class="catalogo-con-carrito">
+        <form class="busqueda" id="formulario-busqueda" role="search">
+            <label class="visually-hidden" for="busqueda-productos">Buscar productos</label>
+            <input id="busqueda-productos" type="search" placeholder="¿Qué producto estás buscando?">
+            <button type="submit">Buscar</button>
+        </form>
+
+        <div class="filtros-categoria" id="filtros-categoria" role="group" aria-label="Filtrar por categoría"></div>
+
+        <!-- NUEVO: filtro por ubicación (la ciudad del productor) -->
+        <div class="filtro-ubicacion">
+            <label for="filtro-ubicacion">📍 Ubicación</label>
+            <select id="filtro-ubicacion">
+                <option value="">Todas las ubicaciones</option>
+            </select>
+        </div>
+
+        <section class="bienvenida">
+            <h2>Bienvenido a Del Campo a Tu Mesa</h2>
+            <p>Conecta directamente con productores locales y encuentra alimentos frescos.</p>
+        </section>
+
+        <section class="productos">
+            <h2>Productos</h2>
+            <!-- NUEVO: anuncia a lectores de pantalla cuántos resultados hay -->
+            <p class="visually-hidden" id="estado-resultados" role="status" aria-live="polite"></p>
+            <div class="productos-container" id="lista-productos">
+            </div>
+        </section>
+
+        <a href="carrito.html" class="boton-carrito" id="boton-carrito" aria-label="Abrir carrito">
+            <span aria-hidden="true">🛒</span>
+            <span id="contador-carrito">0</span>
+        </a>
+    </main>
+
+    <footer>
+        <p>Del Campo a Tu Mesa</p>
+        <p id="pie-comision">Comisión solidaria transparente</p>
+    </footer>
+
+    <script>
+        const API_PRODUCTOS = "/api/productos";
+        const API_CARRITO = "/api/carrito";
+
+        const usuario = Sesion.obtenerUsuario();
+        const esConsumidor = Boolean(
+            usuario && usuario.rol === "consumidor" && Sesion.obtenerToken()
+        );
+        const esProductor = Boolean(
+            usuario && usuario.rol === "productor" && Sesion.obtenerToken()
+        );
+
+        let todosLosProductos = [];
+        let categoriaActiva = "";
+        let ubicacionActiva = ""; // NUEVO: ciudad elegida en el filtro de ubicación
+
+        // Filtro por categoría: botones "Todas", "Hortalizas", "Carnes"...
+        function crearFiltrosCategoria() {
+            const contenedor = document.getElementById("filtros-categoria");
+            const opciones = [{ valor: "", etiqueta: "Todas", icono: "🛒" }].concat(Productos.CATEGORIAS);
+
+            opciones.forEach(function (op) {
+                const boton = document.createElement("button");
+                boton.type = "button";
+                boton.textContent = op.icono + " " + op.etiqueta;
+                boton.dataset.categoria = op.valor;
+                boton.setAttribute("aria-pressed", String(op.valor === categoriaActiva));
+                boton.addEventListener("click", function () {
+                    categoriaActiva = op.valor;
+                    contenedor.querySelectorAll("button").forEach(function (b) {
+                        b.setAttribute("aria-pressed", String(b.dataset.categoria === categoriaActiva));
+                    });
+                    filtrarProductos();
+                });
+                contenedor.appendChild(boton);
+            });
+        }
+
+        // C3: el menú cambia según la sesión y el rol
+        // (es solo comodidad: la seguridad real la aplica el servidor)
+        function actualizarMenuUsuario() {
+            const menu = document.getElementById("menu-usuario");
+
+            if (!usuario || !Sesion.obtenerToken()) {
+                return;
+            }
+
+            menu.innerHTML = "";
+
+            const saludo = document.createElement("span");
+            saludo.textContent = "Hola, " + usuario.nombre;
+
+            const enlace = document.createElement("a");
+            if (usuario.rol === "productor") {
+                enlace.href = "productor.html";
+                enlace.textContent = "Mi panel";
+            } else {
+                enlace.href = "carrito.html";
+                enlace.textContent = "Mi carrito";
+            }
+
+            const botonCerrar = document.createElement("button");
+            botonCerrar.type = "button";
+            botonCerrar.textContent = "Cerrar sesión";
+            botonCerrar.addEventListener("click", function () {
+                Sesion.cerrarSesion();
+            });
+
+            menu.append(saludo, enlace);
+
+            // Solo los consumidores tienen pedidos
+            if (usuario.rol === "consumidor") {
+                const enlacePedidos = document.createElement("a");
+                enlacePedidos.href = "pedidos.html";
+                enlacePedidos.textContent = "Mis pedidos";
+                menu.appendChild(enlacePedidos);
+            }
+
+            menu.appendChild(botonCerrar);
+
+            // Los productores no compran: se oculta el botón del carrito
+            if (esProductor) {
+                document.getElementById("boton-carrito").style.display = "none";
+            }
+        }
+
+        function crearTarjeta(producto) {
+            const tarjeta = document.createElement("div");
+            tarjeta.className = "producto";
+
+            const imagen = document.createElement("div");
+            imagen.className = "imagen-producto";
+            Productos.pintarImagen(imagen, producto);
+
+            const etiqueta = document.createElement("span");
+            etiqueta.className = "categoria-etiqueta";
+            const cat = Productos.datosCategoria(producto.categoria);
+            etiqueta.textContent = cat.icono + " " + cat.etiqueta;
+
+            const nombre = document.createElement("h3");
+            nombre.textContent = producto.nombre;
+
+            const descripcion = document.createElement("p");
+            descripcion.textContent = producto.descripcion;
+
+            const precio = document.createElement("strong");
+            precio.textContent = "$" + producto.precio.toLocaleString("es-CO") + " / kg";
+
+            tarjeta.append(imagen, etiqueta, nombre, descripcion);
+
+            // NUEVO: ubicación del producto (ciudad del productor)
+            if (producto.ciudad) {
+                const ubicacion = document.createElement("p");
+                ubicacion.className = "producto-ubicacion";
+                ubicacion.textContent = "📍 " + producto.ciudad +
+                    (producto.campesino ? " · " + producto.campesino : "");
+                tarjeta.appendChild(ubicacion);
+            }
+
+            tarjeta.appendChild(precio);
+
+            // Los productores solo miran el catálogo: no ven el botón de comprar
+            if (!esProductor) {
+                const boton = document.createElement("button");
+                boton.type = "button";
+
+                if (producto.cantidad === 0) {
+                    boton.textContent = "Agotado";
+                    boton.disabled = true;
+                } else {
+                    boton.textContent = "Agregar al carrito";
+                    boton.addEventListener("click", function () {
+                        agregarAlCarrito(producto);
+                    });
+                }
+
+                tarjeta.appendChild(boton);
+            }
+
+            return tarjeta;
+        }
+
+        function mostrarProductos(lista, textoBusqueda) {
+            const contenedor = document.getElementById("lista-productos");
+            contenedor.innerHTML = "";
+
+            if (todosLosProductos.length === 0) {
+                contenedor.textContent = "Todavía no hay productos publicados.";
+                return;
+            }
+
+            if (lista.length === 0) {
+                contenedor.textContent = textoBusqueda
+                    ? "No se encontraron productos para \u201C" + textoBusqueda + "\u201D."
+                    : "No hay productos con los filtros seleccionados.";
+                return;
+            }
+
+            lista.forEach(function (producto) {
+                contenedor.appendChild(crearTarjeta(producto));
+            });
+        }
+
+        // NUEVO: anuncia el número de resultados a los lectores de pantalla
+        function anunciarResultados(cantidad) {
+            document.getElementById("estado-resultados").textContent =
+                cantidad === 1 ? "1 producto encontrado" : cantidad + " productos encontrados";
+        }
+
+        // Compara ciudades sin distinguir mayúsculas ni espacios sobrantes
+        function normalizarCiudad(ciudad) {
+            return (ciudad || "").trim().toLowerCase();
+        }
+
+        // Llena el filtro de ubicación con las ciudades que realmente tienen productos
+        function llenarFiltroUbicacion() {
+            const select = document.getElementById("filtro-ubicacion");
+            const ciudades = new Map();
+
+            todosLosProductos.forEach(function (producto) {
+                const clave = normalizarCiudad(producto.ciudad);
+                if (clave && !ciudades.has(clave)) {
+                    ciudades.set(clave, producto.ciudad.trim());
+                }
+            });
+
+            select.innerHTML = "";
+
+            const todas = document.createElement("option");
+            todas.value = "";
+            todas.textContent = "Todas las ubicaciones";
+            select.appendChild(todas);
+
+            Array.from(ciudades.entries())
+                .sort(function (a, b) { return a[1].localeCompare(b[1], "es"); })
+                .forEach(function (par) {
+                    const op = document.createElement("option");
+                    op.value = par[0];
+                    op.textContent = par[1];
+                    select.appendChild(op);
+                });
+
+            // Si la ciudad elegida ya no existe, se vuelve a "Todas"
+            if (!ciudades.has(ubicacionActiva)) {
+                ubicacionActiva = "";
+            }
+            select.value = ubicacionActiva;
+        }
+
+        // Buscador + categoría + ubicación: filtra en el cliente
+        function filtrarProductos() {
+            const texto = document.getElementById("busqueda-productos").value.trim();
+            const normalizado = texto.toLowerCase();
+
+            const filtrados = todosLosProductos.filter(function (producto) {
+                if (categoriaActiva && (producto.categoria || "otros") !== categoriaActiva) {
+                    return false;
+                }
+                if (ubicacionActiva && normalizarCiudad(producto.ciudad) !== ubicacionActiva) {
+                    return false;
+                }
+                return (
+                    producto.nombre.toLowerCase().includes(normalizado) ||
+                    producto.descripcion.toLowerCase().includes(normalizado) ||
+                    (producto.campesino || "").toLowerCase().includes(normalizado) ||
+                    (producto.ciudad || "").toLowerCase().includes(normalizado)
+                );
+            });
+
+            mostrarProductos(filtrados, texto);
+            anunciarResultados(filtrados.length);
+        }
+
+        // A1: listar los productos (consulta pública)
+        async function cargarProductos() {
+            try {
+                todosLosProductos = await Sesion.llamarAPI(API_PRODUCTOS, { publica: true });
+                llenarFiltroUbicacion();
+                filtrarProductos();
+            } catch (error) {
+                console.error(error);
+                document.getElementById("lista-productos").textContent =
+                    "No se pudieron cargar los productos.";
+            }
+        }
+
+        async function agregarAlCarrito(producto) {
+            if (!esConsumidor) {
+                alert("Debes iniciar sesión como consumidor para comprar");
+                window.location.href = "login.html";
+                return;
+            }
+
+            try {
+                await Sesion.llamarAPI(API_CARRITO + "/" + usuario.id + "/productos", {
+                    method: "POST",
+                    body: { productoId: producto._id, cantidad: 1 }
+                });
+
+                alert("Producto agregado al carrito correctamente");
+                await actualizarContadorCarrito();
+
+            } catch (error) {
+                Sesion.mostrarError(error);
+            }
+        }
+
+        async function actualizarContadorCarrito() {
+            const contador = document.getElementById("contador-carrito");
+
+            if (!esConsumidor) {
+                contador.textContent = "0";
+                return;
+            }
+
+            try {
+                const carrito = await Sesion.llamarAPI(API_CARRITO + "/" + usuario.id);
+
+                const total = carrito.productos.reduce(function (suma, item) {
+                    return suma + item.cantidad;
+                }, 0);
+
+                contador.textContent = total;
+
+            } catch (error) {
+                console.error("Error al actualizar el carrito:", error);
+            }
+        }
+
+        document.getElementById("formulario-busqueda").addEventListener("submit", function (evento) {
+            evento.preventDefault();
+            filtrarProductos();
+        });
+
+        document.getElementById("busqueda-productos").addEventListener("input", filtrarProductos);
+
+        document.getElementById("filtro-ubicacion").addEventListener("change", function (evento) {
+            ubicacionActiva = evento.target.value;
+            filtrarProductos();
+        });
+
+        // D6: el pie muestra el porcentaje real de la comisión solidaria
+        async function mostrarComision() {
+            try {
+                const datos = await Sesion.llamarAPI("/api/comision", { publica: true });
+                document.getElementById("pie-comision").textContent =
+                    "Comisión solidaria transparente: " + datos.porcentaje +
+                    " % del valor de los productos, visible en cada compra";
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        actualizarMenuUsuario();
+        crearFiltrosCategoria();
+        cargarProductos();
+        actualizarContadorCarrito();
+        mostrarComision();
+    </script>
+
+</body>
+
+</html>

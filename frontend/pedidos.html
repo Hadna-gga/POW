@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis pedidos | Del Campo a Tu Mesa</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="js/mensajes.js"></script>
+    <script src="js/sesion.js"></script>
+</head>
+
+<body>
+    <a class="skip-link" href="#main">Saltar al contenido principal</a>
+    <header>
+        <h1>Del Campo a Tu Mesa</h1>
+        <nav aria-label="Navegación principal" id="menu-usuario">
+            <a href="login.html">Iniciar sesión</a>
+            <a href="registro.html">Registrarme</a>
+        </nav>
+    </header>
+
+    <main id="main" class="carrito-pagina">
+        <a href="index.html" class="volver">← Volver a la tienda</a>
+
+        <h1>Mis pedidos</h1>
+        <p class="resumen-nota">Los pedidos son una simulación: no se realizó ningún cobro real.</p>
+
+        <div id="lista-pedidos" aria-live="polite">Cargando pedidos...</div>
+    </main>
+
+    <footer>
+        <p>Del Campo a Tu Mesa</p>
+        <p>Comisión solidaria transparente</p>
+    </footer>
+
+    <script>
+        // C3: solo los consumidores ven esta página (el servidor también lo exige: 401/403)
+        const usuario = Sesion.exigirSesion("consumidor");
+
+        function pesos(valor) {
+            return "$" + Number(valor || 0).toLocaleString("es-CO");
+        }
+
+        function actualizarMenuUsuario() {
+            const menu = document.getElementById("menu-usuario");
+            menu.innerHTML = "";
+
+            const saludo = document.createElement("span");
+            saludo.textContent = "Hola, " + usuario.nombre;
+
+            const enlace = document.createElement("a");
+            enlace.href = "carrito.html";
+            enlace.textContent = "Mi carrito";
+
+            const botonCerrar = document.createElement("button");
+            botonCerrar.type = "button";
+            botonCerrar.textContent = "Cerrar sesión";
+            botonCerrar.addEventListener("click", function () {
+                Sesion.cerrarSesion();
+            });
+
+            menu.append(saludo, enlace, botonCerrar);
+        }
+
+        function crearTarjetaPedido(pedido) {
+                const tarjeta = document.createElement("article");
+                tarjeta.className = "pedido-tarjeta";
+
+                // Encabezado: número y fecha a la izquierda, estado a la derecha
+                const cabecera = document.createElement("div");
+                cabecera.className = "pedido-cabecera";
+
+                const bloque = document.createElement("div");
+                const titulo = document.createElement("h2");
+                titulo.textContent = "Pedido N.º " + pedido._id.slice(-6).toUpperCase();
+                const fecha = document.createElement("p");
+                fecha.className = "resumen-nota";
+                fecha.textContent = new Date(pedido.createdAt).toLocaleString("es-CO");
+                bloque.append(titulo, fecha);
+
+                const estado = document.createElement("span");
+                estado.className = "etiqueta-estado";
+                estado.textContent = pedido.estado;
+
+                cabecera.append(bloque, estado);
+
+                const lista = document.createElement("ul");
+                lista.className = "pedido-lineas";
+                pedido.items.forEach(function (item) {
+                    const li = document.createElement("li");
+
+                    const detalle = document.createElement("span");
+                    detalle.textContent = item.nombre + " × " + item.cantidad +
+                        " (" + pesos(item.precioUnitario) + " c/u)";
+
+                    const valor = document.createElement("span");
+                    valor.textContent = pesos(item.subtotal);
+
+                    li.append(detalle, valor);
+                    lista.appendChild(li);
+                });
+
+                const desglose = document.createElement("div");
+                desglose.className = "resumen";
+                [
+                    "Subtotal: " + pesos(pedido.subtotal),
+                    "Envío: " + pesos(pedido.envio),
+                    "Comisión solidaria (" + pedido.comisionPorcentaje + " %): " + pesos(pedido.comision)
+                ].forEach(function (texto) {
+                    const p = document.createElement("p");
+                    p.textContent = texto;
+                    desglose.appendChild(p);
+                });
+
+                const total = document.createElement("p");
+                total.className = "total";
+                total.textContent = "Total: " + pesos(pedido.total);
+                desglose.appendChild(total);
+
+                tarjeta.append(cabecera, lista, desglose);
+                return tarjeta;
+            }
+
+            async function cargarPedidos() {
+                const contenedor = document.getElementById("lista-pedidos");
+
+                try {
+                    const pedidos = await Sesion.llamarAPI("/api/pedidos");
+                    contenedor.textContent = "";
+
+                    if (pedidos.length === 0) {
+                        // Estado vacío con un botón para ir a la tienda
+                        contenedor.className = "pedidos-vacio";
+
+                        const mensaje = document.createElement("p");
+                        mensaje.textContent = "Todavía no has hecho pedidos.";
+
+                        const ir = document.createElement("a");
+                        ir.className = "button-link";
+                        ir.href = "index.html";
+                        ir.textContent = "Ir a la tienda";
+
+                        contenedor.append(mensaje, ir);
+                        return;
+                    }
+
+                    contenedor.className = "pedidos-lista";
+
+                    pedidos.forEach(function (pedido) {
+                        contenedor.appendChild(crearTarjetaPedido(pedido));
+                    });
+
+                    // Botón al final de la lista
+                    const acciones = document.createElement("div");
+                    acciones.className = "acciones-pedido";
+
+                    const seguir = document.createElement("a");
+                    seguir.className = "button-link";
+                    seguir.href = "index.html";
+                    seguir.textContent = "Seguir comprando";
+
+                    acciones.appendChild(seguir);
+                    contenedor.appendChild(acciones);
+
+                } catch (error) {
+                    Sesion.mostrarError(error);
+                    contenedor.textContent = "No se pudieron cargar tus pedidos.";
+                }
+            }
+
+        if (usuario) {
+            actualizarMenuUsuario();
+            cargarPedidos();
+        }
+    </script>
+</body>
+
+</html>

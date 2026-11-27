@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - Del Campo a Tu Mesa</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="js/mensajes.js"></script>
+    <script src="js/sesion.js"></script>
+</head>
+
+<body>
+    <a class="skip-link" href="#main">Saltar al contenido principal</a>
+    <header>
+        <h1>Del Campo a Tu Mesa</h1>
+        <nav aria-label="Navegación principal">
+            <a href="index.html">Inicio</a>
+            <a href="login.html">Iniciar sesión</a>
+        </nav>
+    </header>
+
+    <main id="main">
+        <section class="formulario">
+            <h2>Crear una cuenta</h2>
+            <div class="tipo-usuario">
+                <h3>¿Cómo quieres registrarte?</h3>
+                <a class="button-link" href="registro-productor.html">Soy productor</a>
+                <a class="button-link" href="registro-consumidor.html">Soy consumidor</a>
+            </div>
+            <!-- NUEVO: registro con Google (aquí se elige el rol) -->
+            <div class="tipo-usuario">
+                <h3>O regístrate con tu cuenta de Google</h3>
+                <a class="boton-google" href="/api/usuarios/google?rol=productor">Soy productor, continuar con Google</a>
+                <a class="boton-google" href="/api/usuarios/google?rol=consumidor">Soy consumidor, continuar con Google</a>
+            </div>
+        </section>
+    </main>
+    <footer>
+        <p>Del Campo a Tu Mesa</p>
+        <p>Comisión solidaria transparente</p>
+    </footer>
+
+    <script>
+        // NUEVO: si intentó entrar con Google sin tener cuenta, el servidor vuelve aquí con este aviso
+        if (new URLSearchParams(window.location.search).get("error") === "google-sin-cuenta") {
+            alert("Esa cuenta de Google aún no está registrada. Elige cómo quieres registrarte");
+        }
+    </script>
+</body>
+</html>

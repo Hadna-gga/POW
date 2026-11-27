@@ -1,0 +1,33 @@
+{
+  "name": "del-campo-a-tu-mesa",
+  "version": "1.0.0",
+  "description": "Del Campo a tu Mesa: sitio web con API REST, autenticación JWT y autorización por roles",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Hadna-gga/POW.git"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.10",
+    "express": "^5.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.12.3",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  },
+  "scripts": {
+  "start": "node server.js",
+  "dev": "nodemon server.js",
+  "seed": "node scripts/seed.js"
+  }
+}

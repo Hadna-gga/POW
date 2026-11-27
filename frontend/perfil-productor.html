@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil del productor | Del Campo a Tu Mesa</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="js/mensajes.js"></script>
+    <script src="js/sesion.js"></script>
+</head>
+
+<body>
+    <a class="skip-link" href="#main">Saltar al contenido principal</a>
+
+    <div class="pagina-productor">
+        <aside class="barra-lateral">
+            <h2>Productor</h2>
+
+            <nav aria-label="Navegación del productor">
+                <a href="perfil-productor.html">
+                    <span aria-hidden="true">👤</span>
+                    <span class="nav-label">Perfil</span>
+                </a>
+
+                <a href="productos-productor.html">
+                    <span aria-hidden="true">📦</span>
+                    <span class="nav-label">Productos</span>
+                </a>
+
+                <a href="inventario-productor.html">
+                    <span aria-hidden="true">🗃️</span>
+                    <span class="nav-label">Inventario</span>
+                </a>
+
+                <a href="productor.html">
+                    <span aria-hidden="true">↩️</span>
+                    <span class="nav-label">Inicio</span>
+                </a>
+
+                <a href="index.html">
+                    <span aria-hidden="true">🏠</span>
+                    <span class="nav-label">Página principal</span>
+                </a>
+
+                <button type="button" id="cerrar-sesion">
+                    <span aria-hidden="true">🚪</span>
+                    <span class="nav-label">Cerrar sesión</span>
+                </button>
+            </nav>
+        </aside>
+
+        <main id="main" class="contenido-perfil">
+            <h1>Mi perfil</h1>
+            <span aria-hidden="true">👤</span>
+
+            <div class="dato">
+                <label for="ciudad">Ciudad:</label>
+                <!-- NUEVO: lista desplegable (se llena con el script de abajo) -->
+                <select id="ciudad" disabled>
+                    <option value="">No registrada</option>
+                </select>
+            </div>
+
+            <div class="dato">
+                <label for="nombre">Nombre:</label>
+                <input id="nombre" type="text" readonly>
+            </div>
+
+            <div class="dato">
+                <label for="correo">Correo:</label>
+                <input id="correo" type="email" readonly>
+            </div>
+
+            <div class="dato">
+                <label for="telefono">Teléfono:</label>
+                <input id="telefono" type="tel" placeholder="No registrado" readonly>
+            </div>
+
+            <div class="acciones-perfil">
+                <button type="button" id="editar-perfil">Editar perfil</button>
+                <button type="button" id="guardar-perfil" hidden>Guardar cambios</button>
+                <button type="button" id="cancelar-perfil" hidden>Cancelar</button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const usuario = JSON.parse(
+            sessionStorage.getItem("usuario") || "null"
+        );
+
+        const token = sessionStorage.getItem("token");
+
+        const campos = ["nombre", "correo", "ciudad", "telefono"];
+        let perfil = null;
+
+        // NUEVO: ciudades disponibles (Cali y alrededores). Edita esta lista a tu gusto.
+        const CIUDADES = [
+            "Cali", "Candelaria", "Jamundí", "Palmira", "Yumbo", "Florida", "Pradera",
+            "Dagua", "La Cumbre", "Vijes", "Buenaventura", "Buga", "Tuluá",
+            "Cartago", "Sevilla", "Roldanillo", "Otra"
+        ];
+
+        (function llenarCiudades() {
+            const select = document.getElementById("ciudad");
+            CIUDADES.forEach(function (ciudad) {
+                const op = document.createElement("option");
+                op.value = ciudad;
+                op.textContent = ciudad;
+                select.appendChild(op);
+            });
+        })();
+
+        function mostrarPerfil() {
+            // Si la ciudad guardada no está en la lista, se agrega para no perderla
+            const select = document.getElementById("ciudad");
+            if (perfil.ciudad && !Array.from(select.options).some(function (o) { return o.value === perfil.ciudad; })) {
+                const op = document.createElement("option");
+                op.value = perfil.ciudad;
+                op.textContent = perfil.ciudad;
+                select.appendChild(op);
+            }
+
+            campos.forEach(function (campo) {
+                document.getElementById(campo).value = perfil[campo] || "";
+            });
+        }
+
+        function modoEdicion(activo) {
+            campos.forEach(function (campo) {
+                const el = document.getElementById(campo);
+                if (campo === "ciudad") {
+                    el.disabled = !activo; // es una lista desplegable
+                } else {
+                    el.readOnly = !activo;
+                }
+            });
+            document.getElementById("editar-perfil").hidden = activo;
+            document.getElementById("guardar-perfil").hidden = !activo;
+            document.getElementById("cancelar-perfil").hidden = !activo;
+            if (activo) {
+                document.getElementById("nombre").focus();
+            }
+        }
+
+        if (!usuario || usuario.rol !== "productor" || !token) {
+            alert("Debes iniciar sesión como productor");
+            window.location.replace("login.html");
+        } else {
+            // B3: los datos del perfil se piden a la API con el token
+            fetch("/api/usuarios/perfil", {
+                headers: { "Authorization": "Bearer " + token }
+            })
+                .then(async function (respuesta) {
+                    if (respuesta.status === 401) {
+                        sessionStorage.removeItem("token");
+                        sessionStorage.removeItem("usuario");
+                        alert("Tu sesión expiró. Inicia sesión de nuevo");
+                        window.location.replace("login.html");
+                        return;
+                    }
+
+                    if (!respuesta.ok) {
+                        throw new Error("Error al consultar el perfil");
+                    }
+
+                    perfil = await respuesta.json();
+                    mostrarPerfil();
+                })
+                .catch(function (error) {
+                    console.error(error);
+                    alert("No se pudo cargar tu perfil");
+                });
+        }
+
+        document.getElementById("cerrar-sesion").addEventListener("click", function () {
+            sessionStorage.removeItem("token");
+            sessionStorage.removeItem("usuario");
+
+            window.location.replace("login.html");
+        });
+
+        document.getElementById("editar-perfil").addEventListener("click", function () {
+            if (!perfil) { return; }
+            modoEdicion(true);
+        });
+
+        document.getElementById("cancelar-perfil").addEventListener("click", function () {
+            mostrarPerfil();
+            modoEdicion(false);
+        });
+
+        // B5: guardar los cambios del perfil
+        document.getElementById("guardar-perfil").addEventListener("click", async function () {
+            const datos = {};
+            campos.forEach(function (campo) {
+                datos[campo] = document.getElementById(campo).value.trim();
+            });
+
+            if (!datos.nombre) {
+                alert("El nombre es obligatorio");
+                return;
+            }
+
+            try {
+                const respuesta = await Sesion.llamarAPI("/api/usuarios/perfil", {
+                    method: "PUT",
+                    body: datos
+                });
+
+                perfil = Object.assign({}, perfil, respuesta.usuario);
+                // Mantiene al día el nombre que se muestra en el resto del sitio
+                Sesion.guardarSesion(token, Object.assign({}, usuario, {
+                    nombre: perfil.nombre,
+                    correo: perfil.correo
+                }));
+                mostrarPerfil();
+                modoEdicion(false);
+                alert("Perfil actualizado correctamente");
+            } catch (error) {
+                Sesion.mostrarError(error);
+            }
+        });
+    </script>
+</body>
+
+</html>

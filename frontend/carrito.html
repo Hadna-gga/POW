@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrito | Del Campo a Tu Mesa</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="js/mensajes.js"></script>
+    <script src="js/sesion.js"></script>
+    <script src="js/productos.js"></script>
+</head>
+
+<body>
+    <a class="skip-link" href="#main">Saltar al contenido principal</a>
+    <header>
+        <h1>Del Campo a Tu Mesa</h1>
+        <nav aria-label="Navegación principal" id="menu-usuario">
+            <a href="login.html">Iniciar sesión</a>
+            <a href="registro.html">Registrarme</a>
+        </nav>
+    </header>
+
+    <main id="main" class="carrito-pagina">
+        <a href="index.html" class="volver">
+            ← Volver a la tienda
+        </a>
+
+        <h1>Mi carrito</h1>
+        <div class="carrito-contenido">
+            <section class="lista-carrito">
+                <h2>Productos seleccionados</h2>
+                <div id="productos-carrito"></div>
+            </section>
+
+            <section class="informacion-pago">
+                <h2>Información de pago</h2>
+                <fieldset class="metodos-pago">
+                    <legend>Método de pago</legend>
+                    <label>
+                        <input type="radio" name="pago" value="credito">
+                        Tarjeta de crédito
+                    </label>
+                    <label>
+                        <input type="radio" name="pago" value="debito">
+                        Tarjeta débito
+                    </label>
+                    <label>
+                        <input type="radio" name="pago" value="otro">
+                        Otro medio de pago
+                    </label>
+                </fieldset>
+                <div class="resumen" aria-live="polite">
+                    <p id="subtotal-carrito">Subtotal: $0</p>
+                    <p id="envio-carrito">Envío: $0</p>
+                    <p id="comision-carrito">Comisión solidaria: $0</p>
+                    <p class="resumen-nota" id="nota-comision">
+                        La comisión solidaria es un porcentaje mínimo y visible del valor de los productos.
+                        Sostiene la plataforma en lugar de márgenes ocultos de intermediación.
+                    </p>
+                    <p class="total" id="total-carrito">Total: $0</p>
+                </div>
+                <button type="button" class="comprar" id="boton-comprar" disabled>
+                    Realizar compra
+                </button>
+                <p class="resumen-nota">Es una simulación: no se realiza ningún cobro real.</p>
+            </section>
+        </div>
+
+        <!-- D5: confirmación del pedido simulado (se llena desde JavaScript) -->
+        <section class="pedido-confirmado" id="pedido-confirmado" tabindex="-1" hidden></section>
+    </main>
+    <script>
+
+        const usuario = JSON.parse(sessionStorage.getItem("usuario") || "null");
+        const token = sessionStorage.getItem("token");
+
+        if (!usuario || usuario.rol !== "consumidor" || !token) {
+            alert("Debes iniciar sesión como consumidor");
+            window.location.href = "login.html";
+        }
+
+        const API_CARRITO = "/api/carrito/" + (usuario ? usuario.id : "");
+
+
+        async function cargarCarrito() {
+            const contenedor = document.getElementById("productos-carrito");
+
+            try {
+                const respuesta = await fetch(API_CARRITO, {
+                    headers: {
+                        "Authorization": "Bearer " + token
+                    }
+                });
+
+                if (!respuesta.ok) {
+                    throw new Error("No se pudo consultar el carrito");
+                }
+
+                const carrito = await respuesta.json();
+
+                contenedor.innerHTML = "";
+
+                if (carrito.productos.length === 0) {
+                    contenedor.textContent = "Tu carrito está vacío.";
+                }
+
+                carrito.productos.forEach(item => {
+                    const producto = item.producto;
+
+                    if (!producto) return;
+
+                    const tarjeta = document.createElement("div");
+                    tarjeta.className = "producto-carrito";
+
+                    const imagen = document.createElement("div");
+                    imagen.className = "producto-carrito-imagen";
+                    Productos.pintarImagen(imagen, producto);
+
+                    const informacion = document.createElement("div");
+                    informacion.className = "producto-carrito-info";
+
+                    const nombre = document.createElement("h3");
+                    nombre.textContent = producto.nombre;
+
+                    const precio = document.createElement("p");
+                    precio.textContent = "$" +
+                        producto.precio.toLocaleString("es-CO") + " / kg" +
+                        " · Disponibles: " + producto.cantidad;
+
+                    informacion.append(nombre, precio);
+
+                    const cantidad = document.createElement("div");
+                    cantidad.className = "cantidad";
+
+                    const botonMenos = document.createElement("button");
+                    botonMenos.type = "button";
+                    botonMenos.textContent = "−";
+                    botonMenos.setAttribute("aria-label", "Disminuir cantidad de " + producto.nombre);
+                    botonMenos.disabled = item.cantidad <= 1;
+
+                    const numero = document.createElement("span");
+                    numero.textContent = item.cantidad;
+
+                    const botonMas = document.createElement("button");
+                    botonMas.type = "button";
+                    botonMas.textContent = "+";
+                    botonMas.setAttribute("aria-label", "Aumentar cantidad de " + producto.nombre);
+                    botonMas.disabled = item.cantidad >= producto.cantidad;
+
+                    cantidad.append(botonMenos, numero, botonMas);
+                    // ACTUALIZAR CANTIDAD EN MONGODB
+                    async function cambiarCantidad(nuevaCantidad) {
+                        try {
+                            const respuesta = await fetch(
+                                API_CARRITO + "/productos/" + producto._id,
+                                {
+                                    method: "PATCH",
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                        "Authorization": "Bearer " + token
+                                    },
+                                    body: JSON.stringify({
+                                        cantidad: nuevaCantidad
+                                    })
+                                }
+                            );
+
+                            if (!respuesta.ok) {
+                                const error = await respuesta.json();
+                                throw new Error(error.mensaje || "Error al actualizar");
+                            }
+
+                            await cargarCarrito();
+
+                        } catch (error) {
+                            console.error(error);
+                            alert(error.message);
+                        }
+                    }
+
+                    // BOTÓN PARA AUMENTAR
+                    botonMas.addEventListener("click", function () {
+                        cambiarCantidad(item.cantidad + 1);
+                    });
+
+                    // BOTÓN PARA DISMINUIR
+                    botonMenos.addEventListener("click", function () {
+                        cambiarCantidad(item.cantidad - 1);
+                    });
+
+                    const botonEliminar = document.createElement("button");
+                    botonEliminar.type = "button";
+                    botonEliminar.className = "eliminar";
+                    botonEliminar.textContent = "Eliminar";
+
+                    botonEliminar.addEventListener("click", async function () {
+                        // NUEVO: confirmación dentro de la app (antes era confirm() del navegador)
+                        if (!(await confirmarAccion("¿Deseas eliminar este producto del carrito?", "Eliminar"))) {
+                            return;
+                        }
+
+                        try {
+
+                            const respuestaEliminar = await fetch(
+                                API_CARRITO + "/productos/" + producto._id,
+                                {
+                                    method: "DELETE",
+                                    headers: {
+                                        "Authorization": "Bearer " + token
+                                    }
+                                }
+                            );
+
+
+                            if (!respuestaEliminar.ok) {
+                                throw new Error("No se pudo eliminar el producto");
+                            }
+
+                            alert("Producto eliminado del carrito");
+                            await cargarCarrito();
+
+                        } catch (error) {
+                            console.error(error);
+                            alert("Error al eliminar el producto");
+                        }
+                    });
+
+                    tarjeta.append(
+                        imagen,
+                        informacion,
+                        cantidad,
+                        botonEliminar
+                    );
+
+                    contenedor.appendChild(tarjeta);
+                });
+
+                // D6: el servidor calcula el resumen; aquí solo se muestra
+                mostrarResumen(carrito.resumen, carrito.productos.length > 0);
+
+            } catch (error) {
+                console.error(error);
+                contenedor.textContent = "No se pudo cargar el carrito.";
+            }
+        }
+
+        function pesos(valor) {
+            return "$" + Number(valor || 0).toLocaleString("es-CO");
+        }
+
+        // Subtotal, envío, comisión solidaria (con su porcentaje) y total
+        function mostrarResumen(resumen, hayProductos) {
+            resumen = resumen || { subtotal: 0, envio: 0, comision: 0, comisionPorcentaje: 0, total: 0 };
+
+            document.getElementById("subtotal-carrito").textContent =
+                "Subtotal: " + pesos(resumen.subtotal);
+            document.getElementById("envio-carrito").textContent =
+                "Envío: " + pesos(resumen.envio);
+            document.getElementById("comision-carrito").textContent =
+                "Comisión solidaria (" + resumen.comisionPorcentaje + " %): " + pesos(resumen.comision);
+            document.getElementById("total-carrito").textContent =
+                "Total: " + pesos(resumen.total);
+
+            document.getElementById("boton-comprar").disabled = !hayProductos;
+        }
+
+        // D5: simular el pedido
+        function metodoPagoElegido() {
+            const marcado = document.querySelector('input[name="pago"]:checked');
+            return marcado ? marcado.value : "";
+        }
+
+        async function realizarCompra() {
+            const metodoPago = metodoPagoElegido();
+
+            if (!metodoPago) {
+                alert("Elige un método de pago");
+                return;
+            }
+
+            if (!(await confirmarAccion("Se simulará tu pedido (no se cobra nada). ¿Deseas continuar?", "Realizar compra"))) {
+                return;
+            }
+
+            const boton = document.getElementById("boton-comprar");
+            boton.disabled = true;
+
+            try {
+                const datos = await Sesion.llamarAPI("/api/pedidos", {
+                    method: "POST",
+                    body: { metodoPago: metodoPago }
+                });
+
+                mostrarConfirmacion(datos.pedido);
+
+            } catch (error) {
+                Sesion.mostrarError(error);
+                // Por ejemplo, si otro comprador se llevó las existencias: se refresca el carrito
+                await cargarCarrito();
+            }
+        }
+
+        // Una línea del pedido: nombre y cantidad a la izquierda, valor a la derecha
+function crearLineaPedido(item) {
+    const li = document.createElement("li");
+
+    const detalle = document.createElement("span");
+    detalle.textContent = item.nombre + " × " + item.cantidad;
+
+    const valor = document.createElement("span");
+    valor.textContent = pesos(item.subtotal);
+
+    li.append(detalle, valor);
+    return li;
+}
+
+    function mostrarConfirmacion(pedido) {
+        const panel = document.getElementById("pedido-confirmado");
+        panel.textContent = "";
+
+        const icono = document.createElement("div");
+        icono.className = "icono-exito";
+        icono.setAttribute("aria-hidden", "true");
+        icono.textContent = "✓";
+
+        const titulo = document.createElement("h2");
+        titulo.textContent = "¡Pedido registrado!";
+
+        const aviso = document.createElement("p");
+        aviso.className = "resumen-nota";
+        aviso.textContent = "Pedido N.º " + pedido._id.slice(-6).toUpperCase() +
+            ". Es una simulación: no se realizó ningún cobro.";
+
+        const lista = document.createElement("ul");
+        lista.className = "pedido-lineas";
+        pedido.items.forEach(function (item) {
+            lista.appendChild(crearLineaPedido(item));
+        });
+
+        const desglose = document.createElement("div");
+        desglose.className = "resumen";
+        [
+            "Subtotal: " + pesos(pedido.subtotal),
+            "Envío: " + pesos(pedido.envio),
+            "Comisión solidaria (" + pedido.comisionPorcentaje + " %): " + pesos(pedido.comision)
+        ].forEach(function (texto) {
+            const p = document.createElement("p");
+            p.textContent = texto;
+            desglose.appendChild(p);
+        });
+        const total = document.createElement("p");
+        total.className = "total";
+        total.textContent = "Total: " + pesos(pedido.total);
+        desglose.appendChild(total);
+
+        // Dos botones: la acción principal y la secundaria
+        const acciones = document.createElement("div");
+        acciones.className = "acciones-pedido";
+
+        const seguir = document.createElement("a");
+        seguir.className = "button-link";
+        seguir.href = "index.html";
+        seguir.textContent = "Seguir comprando";
+
+        const ver = document.createElement("a");
+        ver.className = "button-link secundario";
+        ver.href = "pedidos.html";
+        ver.textContent = "Ver mis pedidos";
+
+        acciones.append(seguir, ver);
+
+        panel.append(icono, titulo, aviso, lista, desglose, acciones);
+
+        document.querySelector(".carrito-contenido").hidden = true;
+        panel.hidden = false;
+        panel.focus();
+    }
+
+        document.getElementById("boton-comprar").addEventListener("click", realizarCompra);
+
+        cargarCarrito();
+    </script>
+
+    <script>
+        function actualizarMenuUsuario() {
+            const menu = document.getElementById("menu-usuario");
+            const usuarioActual = JSON.parse(
+                sessionStorage.getItem("usuario") || "null"
+            );
+
+            if (!usuarioActual || !sessionStorage.getItem("token")) {
+                return;
+            }
+
+            menu.innerHTML = "";
+
+            const saludo = document.createElement("span");
+            saludo.textContent = "Hola, " + usuarioActual.nombre;
+
+            const botonCerrar = document.createElement("button");
+            botonCerrar.type = "button";
+            botonCerrar.textContent = "Cerrar sesión";
+
+            botonCerrar.addEventListener("click", function () {
+                sessionStorage.removeItem("token");
+                sessionStorage.removeItem("usuario");
+
+                window.location.href = "login.html";
+            });
+
+            menu.append(saludo, botonCerrar);
+        }
+
+        actualizarMenuUsuario();
+    </script>
+
+</body>
+
+</html>
