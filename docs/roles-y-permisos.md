@@ -5,8 +5,8 @@
 | Rol | Quién es | Qué puede hacer |
 |---|---|---|
 | **Visitante** (sin sesión) | Cualquier persona que entra al sitio | Ver el catálogo de productos, buscar y filtrar, registrarse e iniciar sesión. |
-| **consumidor** | Usuario registrado que compra | Todo lo del visitante, más usar **su propio** carrito y ver o editar **su propio** perfil. |
-| **productor** | Usuario registrado que vende | Todo lo del visitante, más publicar, modificar y eliminar **sus propios** productos, y ver o editar **su propio** perfil. |
+| **consumidor** | Usuario registrado que compra | Todo lo del visitante, más usar **su propio** carrito, realizar compras y ver o editar **su propio** perfil. |
+| **productor** | Usuario registrado que vende | Todo lo del visitante, más publicar, modificar y eliminar **sus propios** productos, consultar sus ventas y ver o editar **su propio** perfil. |
 
 El sistema tiene **dos roles** y ninguno es administrador. El rol se guarda en el campo `rol` del usuario (`"consumidor"` o `"productor"`).
 
@@ -27,6 +27,11 @@ El sistema tiene **dos roles** y ninguno es administrador. El rol se guarda en e
 | Consultar mi perfil (`GET /api/usuarios/perfil`) | B3 | ❌ 401 | ✅ | ✅ |
 | Editar mi perfil (`PUT /api/usuarios/perfil`) | B5 | ❌ 401 | ✅ | ✅ |
 | Carrito: agregar, consultar, cambiar cantidad, quitar (`/api/carrito/:comprador/...`) | D1 a D4 | ❌ 401 | ✅ solo el suyo, si no ❌ 403 | ❌ 403 |
+| Crear un pedido (`POST /api/pedidos`) | D5 | ❌ 401 | ✅ | ❌ 403 |
+| Listar mis pedidos (`GET /api/pedidos`) | D7 | ❌ 401 | ✅ solo los suyos | ❌ 403 |
+| Consultar un pedido (`GET /api/pedidos/:id`) | D7 | ❌ 401 | ✅ solo si es suyo, si no ❌ 403 | ❌ 403 |
+| Estadísticas del mes (`GET /api/pedidos/ventas-mes`) | F2 | ❌ 401 | ❌ 403 | ✅ solo sus ventas |
+| Consultar la comisión (`GET /api/comision`) | D6 | ✅ | ✅ | ✅ |
 
 La característica **B4 (cerrar sesión)** no tiene endpoint: el cliente descarta el token.
 
@@ -36,7 +41,7 @@ La característica **B4 (cerrar sesión)** no tiene endpoint: el cliente descart
 |---|---|---|
 | Significa | "No sé quién eres": no hay token, es inválido, venció, o el usuario ya no existe. | "Sé quién eres, pero no tienes permiso para esto". |
 | Se arregla | Iniciando sesión de nuevo. | No se arregla iniciando sesión: hace falta otro rol o ser el dueño del recurso. |
-| Mensajes | "Debes iniciar sesión" · "Sesión inválida o vencida" | "Solo los productores pueden realizar esta acción" · "Solo puedes editar tus propios productos" · "Solo puedes eliminar tus propios productos" · "Solo los consumidores pueden utilizar el carrito" · "No puedes acceder al carrito de otro usuario" |
+| Mensajes | "Debes iniciar sesión" · "Sesión inválida o vencida" | "Solo los productores pueden realizar esta acción" · "Solo puedes editar tus propios productos" · "Solo puedes eliminar tus propios productos" · "Solo los consumidores pueden utilizar el carrito" · "No puedes acceder al carrito de otro usuario". |
 
 **Cómo demostrar cada uno** (con el servidor encendido):
 
@@ -58,6 +63,7 @@ En el sitio, las llamadas hechas con `Sesion.llamarAPI` (`frontend/js/sesion.js`
 | **Autenticación** (¿quién eres?) | `backend/middleware/auth.js` → `verificarToken` | Verifica el JWT y responde **401** si falta o es inválido. Después busca al usuario en la base de datos y guarda `req.usuario = { id, rol }`. |
 | **Rol productor** (C1) | `backend/middleware/auth.js` → `soloProductor` | Responde **403** si `req.usuario.rol` no es `productor`. Se aplica a crear, modificar, eliminar y "mis productos". |
 | **Dueño del producto** (C2) | `backend/routes/productoRoutes.js` (rutas `PUT` y `DELETE`) | Compara `producto.productorId` con `req.usuario.id`; si no coinciden, **403**. "Mis productos" filtra por `productorId`. |
+| **Rol consumidor** (C1) | `backend/middleware/auth.js` → `soloConsumidor` | Responde **403** si `req.usuario.rol` no es `consumidor`. Protege las operaciones de pedidos del consumidor, como crear pedidos, listar los propios y consultar un pedido. |
 | **Rol consumidor y carrito propio** (C1, C2) | `backend/routes/carritoRoutes.js` → `verificarComprador` | Responde **403** si el rol no es `consumidor` y **403** si `:comprador` de la URL no es el id del usuario del token. |
 | **Perfil propio** (C2) | `backend/routes/usuarioRoutes.js` | El perfil se busca siempre con `req.usuario.id` (el del token), nunca con un id recibido en la petición. |
 | **Interfaz según el rol** (C3) | `frontend/js/sesion.js` → `exigirSesion(rol)`; `frontend/index.html` | Las páginas de productor y de consumidor exigen sesión y rol y, si no se cumple, redirigen al login. El menú del encabezado cambia (productor: "Mi panel"; consumidor: "Mi carrito") y a los productores se les ocultan el botón de comprar y el carrito. |

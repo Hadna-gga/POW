@@ -27,7 +27,8 @@ El token (JWT, vigencia de 2 horas) se obtiene en `POST /api/usuarios/login`.
 | `400 Bad Request` | Datos inválidos o faltantes, id mal formado, stock insuficiente. |
 | `401 Unauthorized` | Falta el token, es inválido, venció, o el usuario ya no existe. **No se sabe quién eres.** |
 | `403 Forbidden` | Estás autenticado, pero tu rol o el dueño del recurso no te permite la acción. |
-| `404 Not Found` | El recurso (producto, carrito) no existe. |
+| `404 Not Found` | El recurso (producto, carrito, pedido) no existe. |
+| `409 Conflict` | El pedido no se puede completar porque un producto ya no tiene existencias suficientes. |
 | `500 Internal Server Error` | Error inesperado; el detalle queda en el log del servidor, no en la respuesta. |
 
 **Resumen de endpoints**
@@ -50,6 +51,11 @@ El token (JWT, vigencia de 2 horas) se obtiene en `POST /api/usuarios/login`.
 | GET | `/api/carrito/:comprador` | Sí | consumidor (solo su carrito) |
 | PATCH | `/api/carrito/:comprador/productos/:productoId` | Sí | consumidor (solo su carrito) |
 | DELETE | `/api/carrito/:comprador/productos/:productoId` | Sí | consumidor (solo su carrito) |
+| POST | `/api/pedidos` | Sí | consumidor |
+| GET | `/api/pedidos` | Sí | consumidor (solo los suyos) |
+| GET | `/api/pedidos/ventas-mes` | Sí | productor |
+| GET | `/api/pedidos/:id` | Sí | consumidor (solo el dueño) |
+| GET | `/api/comision` | No | Público |
 
 > **Cerrar sesión (B4)** no tiene endpoint: el JWT no se guarda en el servidor, así que el cliente simplemente descarta el token.
 
@@ -75,6 +81,7 @@ Público. El rol es `consumidor` o `productor` (cualquier otro valor se rechaza)
 | `correo` | texto | Obligatorio, formato de correo; se guarda en minúsculas y es único |
 | `contrasena` | texto | Obligatorio, mínimo 8 caracteres; se guarda con bcrypt |
 | `rol` | texto | `"consumidor"` o `"productor"` |
+| `ciudad` | texto | Opcional para consumidores y **obligatoria para productores**; máximo 60 caracteres |
 
 ```bash
 curl -X POST http://localhost:3000/api/usuarios/registro \
@@ -91,7 +98,7 @@ curl -X POST http://localhost:3000/api/usuarios/registro \
 }
 ```
 
-**Errores:** `400` "Todos los campos son obligatorios" · "Los datos enviados no son válidos" · "El correo no tiene un formato válido" · "Tipo de usuario no válido" · "La contraseña debe tener al menos 8 caracteres" · "Este correo ya está registrado".
+**Errores:** `400` "Todos los campos son obligatorios" · "Los datos enviados no son válidos" · "El correo no tiene un formato válido" · "Tipo de usuario no válido" · "La contraseña debe tener al menos 8 caracteres" · "La ciudad no es válida" · "La ciudad es obligatoria para los productores" · "Este correo ya está registrado".
 
 ### `POST /api/usuarios/login`: iniciar sesión (B2)
 
@@ -155,7 +162,7 @@ Requiere token. Roles: consumidor y productor.
 |---|---|
 | `nombre` | Obligatorio |
 | `correo` | Obligatorio, formato válido y no usado por otra cuenta |
-| `ciudad` | Opcional (texto) |
+| `ciudad` | Opcional (texto de hasta 60 caracteres) |
 | `telefono` | Opcional; si se envía, de 7 a 20 caracteres entre dígitos, `+`, espacios, `()` y `-` |
 
 ```bash
@@ -175,7 +182,7 @@ curl -X PUT http://localhost:3000/api/usuarios/perfil \
 
 Si quien edita es un productor, el nombre se actualiza también en todos sus productos.
 
-**Errores:** `400` "El nombre es obligatorio" · "El correo no tiene un formato válido" · "Los datos enviados no son válidos" · "El teléfono no es válido" · "Este correo ya está registrado" · `401` · `404`.
+**Errores:** `400` "El nombre es obligatorio" · "El correo no tiene un formato válido" · "Los datos enviados no son válidos" · "El teléfono no es válido" · "La ciudad es demasiado larga" · "Este correo ya está registrado" · `401` · `404`.
 
 ---
 
@@ -193,6 +200,7 @@ Si quien edita es un productor, el nombre se actualiza también en todos sus pro
   "categoria": "hortalizas",
   "cantidad": 20,
   "campesino": "Juan Pérez",
+  "ciudad": "Cali",
   "productorId": "66a1f0c2b3e4d5a6b7c8d9e1",
   "createdAt": "2026-11-26T15:10:00.000Z",
   "updatedAt": "2026-11-26T15:10:00.000Z"
@@ -203,13 +211,19 @@ Si quien edita es un productor, el nombre se actualiza también en todos sus pro
 
 ### `GET /api/productos`: listar los productos (A1)
 
-Público. Devuelve un arreglo con todos los productos.
+Público. Devuelve un arreglo con los productos. Acepta dos filtros opcionales en la URL, que se pueden combinar:
+
+| Parámetro | Efecto |
+|---|---|
+| `categoria` | Solo los productos de esa categoría (`hortalizas`, `frutas`, `carnes`, `lacteos`, `granos`, `otros`). |
+| `ciudad` | Solo los productos de esa ciudad (ubicación del productor), sin distinguir mayúsculas. Máximo 60 caracteres. |
 
 ```bash
 curl http://localhost:3000/api/productos
+curl "http://localhost:3000/api/productos?categoria=frutas&ciudad=Cali"
 ```
 
-**200 OK:** `[ { ...producto }, { ...producto } ]`  ·  **Errores:** `500`.
+**200 OK:** `[ { ...producto }, { ...producto } ]`  ·  **Errores:** `400` "La categoría no es válida" · "La ciudad no es válida" · `500`.
 
 ### `GET /api/productos/:id`: consultar el detalle de un producto (A2)
 
@@ -234,7 +248,7 @@ curl http://localhost:3000/api/productos/mis-productos -H "Authorization: Bearer
 
 ### `POST /api/productos`: crear un producto (A3)
 
-Requiere token. Rol: productor. El nombre del productor y su id se toman del token, no del cuerpo.
+Requiere token. Rol: productor. El nombre del productor, su id y su **ciudad** se toman de su cuenta (token y perfil), no del cuerpo.
 
 | Campo | Tipo | Reglas |
 |---|---|---|
@@ -342,6 +356,114 @@ curl -X DELETE http://localhost:3000/api/carrito/$ID/productos/66a1f1d4b3e4d5a6b
 
 **200 OK:** `{ "mensaje": "Producto eliminado del carrito correctamente", "carrito": { ... } }`
 **Errores:** `400` · `401` · `403` · `404` "Carrito no encontrado" / "Producto no encontrado en el carrito".
+
+---
+
+## Pedidos
+
+El pedido es una **simulación**: no hay cobro real ni pasarela de pago. Solo los **consumidores** crean y consultan pedidos, y siempre los **suyos**: el carrito sale del usuario del token, nunca de un id enviado en la petición.
+
+**Objeto pedido.** Cada línea guarda una "foto" del producto al momento de comprar (nombre, productor y precio), de modo que el pedido no cambia si el productor edita o borra el producto después. El desglose es el de la comisión solidaria.
+
+```json
+{
+  "_id": "66a1f3f6b3e4d5a6b7c8dc20",
+  "comprador": "66a1f0c2b3e4d5a6b7c8d9e0",
+  "items": [
+    {
+      "producto": "66a1f1d4b3e4d5a6b7c8da01",
+      "productorId": "66a1f0c2b3e4d5a6b7c8d9e1",
+      "nombre": "Tomate chonto",
+      "campesino": "Juan Pérez",
+      "precioUnitario": 3500,
+      "cantidad": 2,
+      "subtotal": 7000
+    }
+  ],
+  "metodoPago": "credito",
+  "subtotal": 7000,
+  "envio": 0,
+  "comisionPorcentaje": 5,
+  "comision": 350,
+  "total": 7350,
+  "estado": "simulado",
+  "createdAt": "2026-11-26T16:00:00.000Z",
+  "updatedAt": "2026-11-26T16:00:00.000Z"
+}
+```
+
+### `POST /api/pedidos`: simular el pedido del carrito (D5)
+
+Requiere token. Rol: consumidor. Cuerpo: `metodoPago`, que debe ser `"credito"`, `"debito"` u `"otro"`.
+
+El servidor **recalcula todo**: toma los precios de la base de datos (no del cliente), descuenta del inventario de forma atómica solo si hay existencias suficientes, calcula la comisión, guarda el pedido y vacía el carrito. Si algo falla a mitad del proceso, el inventario se restituye.
+
+```bash
+curl -X POST http://localhost:3000/api/pedidos \
+  -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" \
+  -d '{"metodoPago":"credito"}'
+```
+
+**201 Created:** `{ "mensaje": "Pedido simulado correctamente. No se realizó ningún cobro", "pedido": { ... } }`
+**Errores:** `400` "Elige un método de pago válido (credito, debito u otro)" · "Tu carrito está vacío" · `401` · `403` "Solo los consumidores pueden realizar esta acción" · `409` "No hay suficiente cantidad disponible de "NombreDelProducto"" · `500`.
+
+### `GET /api/pedidos`: listar mis pedidos (D7)
+
+Requiere token. Rol: consumidor. Devuelve solo los pedidos del usuario, del más reciente al más antiguo.
+
+```bash
+curl http://localhost:3000/api/pedidos -H "Authorization: Bearer $TOKEN"
+```
+
+**200 OK:** arreglo de pedidos  ·  **Errores:** `401` · `403`.
+
+### `GET /api/pedidos/:id`: consultar el detalle de un pedido (D7)
+
+Requiere token. Rol: consumidor, **solo el dueño del pedido**.
+
+**200 OK:** el objeto pedido.
+**Errores:** `400` "El identificador no es válido" · `401` · `403` "Solo los consumidores pueden realizar esta acción" / "No puedes ver los pedidos de otro usuario" · `404` "Pedido no encontrado".
+
+### `GET /api/pedidos/ventas-mes`: estadísticas del mes del productor (F2)
+
+Requiere token. Rol: productor. Resume lo vendido **en sus propios productos** durante el mes en curso. Los ingresos son el valor de sus productos; la comisión solidaria no se resta (se muestra aparte en cada pedido).
+
+```bash
+curl http://localhost:3000/api/pedidos/ventas-mes -H "Authorization: Bearer $TOKEN"
+```
+
+**200 OK**
+
+```json
+{
+  "mes": "2026-11",
+  "pedidos": 3,
+  "unidades": 11,
+  "ingresos": 38500,
+  "productos": [
+    { "producto": "66a1f1d4b3e4d5a6b7c8da01", "nombre": "Tomate chonto", "unidades": 7, "ingresos": 24500 },
+    { "producto": "66a1f1d4b3e4d5a6b7c8da02", "nombre": "Cebolla larga", "unidades": 4, "ingresos": 14000 }
+  ]
+}
+```
+
+**Errores:** `401` · `403` "Solo los productores pueden realizar esta acción" · `500` "Error al consultar las estadísticas".
+
+---
+
+## Comisión solidaria
+
+### `GET /api/comision`: consultar el porcentaje de comisión (D6)
+
+Público. Devuelve el porcentaje que sostiene la plataforma, **visible para cualquier visitante**. Por defecto es 5 % y se puede cambiar con la variable de entorno `COMISION_PORCENTAJE`.
+
+```bash
+curl http://localhost:3000/api/comision
+```
+
+**200 OK:** `{ "porcentaje": 5 }`
+
+La comisión de un pedido se calcula como `subtotal × porcentaje / 100`, redondeada a pesos enteros, y el total es `subtotal + envío + comisión` (el MVP no cobra envío).
 
 ---
 

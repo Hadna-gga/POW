@@ -7,8 +7,8 @@ flowchart LR
     N["Navegador<br/>HTML + CSS + JavaScript"] -->|"fetch (JSON + token)"| E["Servidor Express<br/>backend/server.js"]
     E -->|"archivos estáticos"| N
     E --> M["middleware<br/>auth.js, validar.js"]
-    M --> R["routes<br/>usuario, producto, carrito"]
-    R --> O["models (Mongoose)<br/>Usuario, Producto, Carrito"]
+    M --> R["routes<br/>usuario, producto, carrito, pedido"]
+    R --> O["models (Mongoose)<br/>Usuario, Producto, Carrito, Pedido"]
     O --> D[("MongoDB")]
 ```
 
@@ -23,7 +23,7 @@ flowchart LR
 | `server.js` | Punto de entrada: configura los middlewares globales (`cors`, `express.json`, archivos estáticos), monta las rutas, el 404 de la API y el manejador de errores. |
 | `config/` | Conexión a MongoDB (`db.js`) y estrategia de Google OAuth (`passport.js`). |
 | `middleware/` | Lógica que se reutiliza en varias rutas: autenticación y roles (`auth.js`) y validación de ids (`validar.js`). |
-| `models/` | Esquemas de datos: `Usuario`, `Producto`, `Carrito`. |
+| `models/` | Esquemas de datos: `Usuario`, `Producto`, `Carrito` y `Pedido`. |
 | `routes/` | Los endpoints de cada recurso y su lógica (validación, consulta a la base de datos y respuesta). No hay una carpeta `controllers`: cada archivo de rutas contiene los manejadores de su recurso. |
 
 Separar así permite cambiar una parte sin tocar las otras: por ejemplo, agregar un rol solo toca `middleware/` y las rutas afectadas, y cambiar la base de datos solo toca `config/` y `models/`.
@@ -63,6 +63,9 @@ erDiagram
     USUARIO ||--o| CARRITO : "tiene"
     CARRITO ||--o{ ITEM_CARRITO : "contiene"
     PRODUCTO ||--o{ ITEM_CARRITO : "aparece en"
+    USUARIO ||--o{ PEDIDO : "realiza"
+    PEDIDO ||--|{ ITEM_PEDIDO : "contiene"
+    ITEM_PEDIDO }o--|| PRODUCTO : "referencia"
 
     USUARIO {
         ObjectId _id PK
@@ -84,6 +87,7 @@ erDiagram
         number precio "mayor o igual a 0"
         number cantidad "stock, mayor o igual a 0"
         string categoria "hortalizas, frutas, carnes, lacteos, granos u otros"
+        string ciudad
         string imagen "foto en base64 o vacio"
         string campesino "nombre del productor (copia)"
         ObjectId productorId FK "referencia a USUARIO"
@@ -102,15 +106,34 @@ erDiagram
         ObjectId producto FK "referencia a PRODUCTO"
         number cantidad "minimo 1"
     }
+
+    PEDIDO {
+        ObjectId _id PK
+        ObjectId comprador FK
+        number subtotal
+        number comision
+        number total
+        date createdAt
+        date updatedAt
+    }
+
+    ITEM_PEDIDO {
+        ObjectId producto FK "referencia a PRODUCTO"
+        string nombre
+        number precio
+        number cantidad
+    }
 ```
 
 ### Descripción de las entidades
 
-**Usuario** (colección `usuarios`). Puede registrarse con contraseña (se guarda solo el hash con bcrypt) o con Google (se guarda `googleId` y no hay contraseña). El `rol` solo admite `consumidor` o `productor`. El `correo` es único.
+**Usuario** (colección `usuarios`). Puede registrarse con contraseña (se guarda solo el hash con bcrypt) o con Google (se guarda `googleId` y no hay contraseña). El `rol` solo admite `consumidor` o `productor`. El `correo` es único. El campo `ciudad` permite identificar la ubicación del usuario.
 
-**Producto** (colección `productos`). Es la **entidad principal** del CRUD. `productorId` apunta al usuario dueño: de ahí sale la regla "cada productor solo modifica lo suyo". `categoria` permite filtrar el catálogo. `imagen` es una foto reducida guardada como texto base64 (o vacío).
+**Producto** (colección `productos`). Es la **entidad principal** del CRUD. `productorId` apunta al usuario dueño: de ahí sale la regla "cada productor solo modifica lo suyo". `categoria` permite filtrar el catálogo. `ciudad` permite identificar la ubicación del producto. `imagen` es una foto reducida guardada como texto base64 (o vacío).
 
 **Carrito** (colección `carritos`). Hay un carrito por consumidor. Sus elementos (`productos`) están **incrustados** dentro del documento: cada uno guarda la referencia al producto y la cantidad. Se muestra en el diagrama como `ITEM_CARRITO` para dejar clara la relación muchos a muchos entre carritos y productos, aunque no es una colección aparte.
+
+**Pedido** (colección `pedidos`). Guarda la información de cada compra realizada por un consumidor, incluyendo los productos comprados y una "foto" de cada producto al momento de la compra, con su nombre y precio. Esta copia permite que los cambios posteriores en los productos del catálogo no alteren la información histórica del pedido. Además, incluye el desglose del subtotal, la comisión y el total de la compra.
 
 ### Decisiones de modelado
 
